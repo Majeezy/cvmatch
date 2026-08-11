@@ -1,0 +1,1495 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Job Application Assistant v2.0</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{--bg:#0d1117;--card:#161b22;--border:#30363d;--accent:#58a6ff;--green:#3fb950;--red:#f85149;--yellow:#d29922;--text:#e6edf3;--muted:#8b949e;--purple:#bc8cff;--orange:#ffa657}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;display:flex;font-size:14px}
+#sidebar{width:220px;min-width:220px;background:var(--card);border-right:1px solid var(--border);display:flex;flex-direction:column;padding:16px 0}
+.logo{padding:0 16px 16px;border-bottom:1px solid var(--border);margin-bottom:8px}
+.logo h1{font-size:15px;font-weight:700;color:var(--accent)}
+.logo span{font-size:11px;color:var(--muted)}
+.nav-item{display:flex;align-items:center;gap:10px;padding:9px 16px;cursor:pointer;color:var(--muted);transition:.15s;border-left:3px solid transparent;font-size:13px}
+.nav-item:hover{color:var(--text);background:rgba(255,255,255,.04)}
+.nav-item.active{color:var(--accent);border-left-color:var(--accent);background:rgba(88,166,255,.08)}
+.nav-icon{width:18px;text-align:center;font-size:15px}
+.sidebar-footer{margin-top:auto;padding:12px 16px;border-top:1px solid var(--border)}
+.api-key-wrap input{width:100%;background:var(--bg);border:1px solid var(--border);color:var(--text);padding:7px 10px;border-radius:6px;font-size:12px}
+.api-key-wrap label{font-size:11px;color:var(--muted);display:block;margin-bottom:4px}
+.auth-screen{display:none;position:fixed;inset:0;background:var(--bg);z-index:200;align-items:center;justify-content:center}
+.auth-screen.open{display:flex}
+.auth-card{width:340px}
+.auth-logo{display:flex;align-items:center;gap:10px;justify-content:center;margin-bottom:18px}
+.auth-logo h1{font-size:17px;font-weight:700;color:var(--accent)}
+#userInfo{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;font-size:12px;color:var(--muted);gap:8px}
+#userEmail{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#main{flex:1;overflow-y:auto;padding:24px}
+.page{display:none}
+.page.active{display:block}
+h2{font-size:18px;font-weight:600;margin-bottom:16px}
+.card{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:16px;margin-bottom:16px}
+.card-title{font-size:12px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:12px}
+.stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px}
+.stat-card{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:16px;text-align:center}
+.stat-num{font-size:28px;font-weight:700;color:var(--accent)}
+.stat-label{font-size:11px;color:var(--muted);margin-top:4px}
+.btn{display:inline-flex;align-items:center;gap:6px;padding:8px 16px;border-radius:6px;border:none;cursor:pointer;font-size:13px;font-weight:500;transition:.15s}
+.btn-primary{background:var(--accent);color:#000}
+.btn-primary:hover{opacity:.85}
+.btn-secondary{background:transparent;border:1px solid var(--border);color:var(--text)}
+.btn-secondary:hover{border-color:var(--accent);color:var(--accent)}
+.btn-danger{background:transparent;border:1px solid var(--red);color:var(--red)}
+.btn-sm{padding:5px 10px;font-size:12px}
+.btn-green{background:var(--green);color:#000}
+input,textarea,select{background:var(--bg);border:1px solid var(--border);color:var(--text);padding:8px 12px;border-radius:6px;font-size:13px;width:100%}
+input:focus,textarea:focus,select:focus{outline:none;border-color:var(--accent)}
+label{font-size:12px;color:var(--muted);display:block;margin-bottom:5px}
+.form-group{margin-bottom:14px}
+.row{display:flex;gap:12px}
+.row .form-group{flex:1}
+.steps{display:flex;margin-bottom:20px;overflow:hidden;border-radius:6px;border:1px solid var(--border)}
+.step{flex:1;padding:10px;text-align:center;font-size:12px;color:var(--muted);background:var(--card);cursor:pointer;border-right:1px solid var(--border)}
+.step:last-child{border-right:none}
+.step.active{background:rgba(88,166,255,.15);color:var(--accent);font-weight:600}
+.step.done{background:rgba(63,185,80,.1);color:var(--green)}
+.step-content{display:none}
+.step-content.active{display:block}
+.alert{padding:10px 14px;border-radius:6px;font-size:13px;margin-bottom:12px}
+.alert-info{background:rgba(88,166,255,.1);border:1px solid rgba(88,166,255,.3);color:var(--accent)}
+.alert-success{background:rgba(63,185,80,.1);border:1px solid rgba(63,185,80,.3);color:var(--green)}
+.alert-warn{background:rgba(210,153,34,.1);border:1px solid rgba(210,153,34,.3);color:var(--yellow)}
+.alert-error{background:rgba(248,81,73,.1);border:1px solid rgba(248,81,73,.3);color:var(--red)}
+.badge{display:inline-block;padding:2px 8px;border-radius:12px;font-size:11px;font-weight:600}
+.badge-applied{background:rgba(88,166,255,.2);color:var(--accent)}
+.badge-interview{background:rgba(188,140,255,.2);color:var(--purple)}
+.badge-offer{background:rgba(63,185,80,.2);color:var(--green)}
+.badge-rejected{background:rgba(248,81,73,.2);color:var(--red)}
+.badge-withdrawn{background:rgba(139,148,158,.2);color:var(--muted)}
+.badge-interviewed{background:rgba(255,166,87,.2);color:var(--orange)}
+table{width:100%;border-collapse:collapse}
+th{text-align:left;padding:8px 12px;font-size:11px;color:var(--muted);font-weight:600;text-transform:uppercase;border-bottom:1px solid var(--border)}
+td{padding:10px 12px;border-bottom:1px solid rgba(48,54,61,.5);font-size:13px;vertical-align:middle}
+tr:hover td{background:rgba(255,255,255,.02)}
+.score-bar-wrap{height:6px;background:var(--border);border-radius:3px;overflow:hidden;width:80px;display:inline-block;vertical-align:middle}
+.score-bar{height:100%;border-radius:3px;background:var(--accent)}
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:100;align-items:center;justify-content:center}
+.modal-overlay.open{display:flex}
+.modal{background:var(--card);border:1px solid var(--border);border-radius:10px;width:90%;max-width:700px;max-height:88vh;display:flex;flex-direction:column}
+.modal-header{padding:16px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+.modal-header h3{font-size:15px;font-weight:600}
+.modal-close{background:none;border:none;color:var(--muted);cursor:pointer;font-size:20px;line-height:1}
+.modal-close:hover{color:var(--text)}
+.modal-body{padding:20px;overflow-y:auto;flex:1}
+.modal-footer{padding:14px 20px;border-top:1px solid var(--border);display:flex;gap:8px;justify-content:flex-end}
+.spinner{display:inline-block;width:16px;height:16px;border:2px solid rgba(88,166,255,.3);border-top-color:var(--accent);border-radius:50%;animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.loading-row{display:flex;align-items:center;gap:10px;padding:16px;color:var(--muted)}
+.tag{display:inline-block;background:rgba(88,166,255,.1);color:var(--accent);border:1px solid rgba(88,166,255,.2);border-radius:4px;padding:2px 8px;font-size:11px;margin:2px}
+.tag.miss{background:rgba(248,81,73,.1);color:var(--red);border-color:rgba(248,81,73,.2)}
+.section-score{display:flex;align-items:center;gap:10px;margin-bottom:8px}
+.section-score .name{flex:1;font-size:13px}
+.section-score .val{font-size:13px;font-weight:600;color:var(--accent);width:36px;text-align:right}
+.kanban{display:grid;grid-template-columns:repeat(6,minmax(160px,1fr));gap:12px;overflow-x:auto;padding-bottom:8px}
+.kanban-col{background:var(--card);border:1px solid var(--border);border-radius:8px;min-height:200px}
+.kanban-col-header{padding:10px 12px;border-bottom:1px solid var(--border);font-size:12px;font-weight:600;color:var(--muted)}
+.kanban-col-body{padding:8px}
+.kanban-card{background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:10px;margin-bottom:8px;cursor:grab;font-size:12px}
+.kanban-card:hover{border-color:var(--accent)}
+.kanban-card .kc-title{font-weight:600;margin-bottom:4px}
+.kanban-card .kc-co{color:var(--muted)}
+.kanban-col.drag-over{border-color:var(--accent);background:rgba(88,166,255,.05)}
+.heatmap-grid{display:grid;grid-template-columns:repeat(53,1fr);gap:2px;margin-top:8px}
+.hm-cell{width:100%;aspect-ratio:1;border-radius:2px;background:var(--border)}
+.hm-cell.c1{background:rgba(63,185,80,.3)}
+.hm-cell.c2{background:rgba(63,185,80,.5)}
+.hm-cell.c3{background:rgba(63,185,80,.7)}
+.hm-cell.c4{background:var(--green)}
+.bar-chart{display:flex;align-items:flex-end;gap:3px;height:80px;margin-top:8px}
+.bar-item{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px}
+.bar{width:100%;background:rgba(88,166,255,.4);border-radius:2px 2px 0 0;min-height:2px;transition:.3s}
+.bar-label{font-size:9px;color:var(--muted);text-align:center}
+.funnel-row{display:flex;align-items:center;gap:12px;margin-bottom:8px}
+.funnel-bar-wrap{flex:1;height:22px;background:var(--border);border-radius:4px;overflow:hidden}
+.funnel-bar{height:100%;background:var(--accent);border-radius:4px;display:flex;align-items:center;padding-left:8px;font-size:11px;color:#000;font-weight:600;min-width:24px;transition:.4s}
+.funnel-label{width:130px;font-size:12px;color:var(--muted)}
+.funnel-count{width:30px;text-align:right;font-size:12px;font-weight:600}
+#toasts{position:fixed;bottom:20px;right:20px;z-index:999;display:flex;flex-direction:column;gap:8px}
+.toast{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:12px 16px;font-size:13px;min-width:260px;animation:slideIn .3s ease;display:flex;align-items:center;gap:10px}
+.toast.success{border-left:3px solid var(--green)}
+.toast.error{border-left:3px solid var(--red)}
+.toast.info{border-left:3px solid var(--accent)}
+@keyframes slideIn{from{transform:translateX(100%);opacity:0}to{transform:none;opacity:1}}
+.cv-list{display:grid;gap:6px;max-height:200px;overflow-y:auto}
+.cv-item{display:flex;align-items:center;gap:10px;padding:8px 12px;border:1px solid var(--border);border-radius:6px;cursor:pointer;transition:.15s}
+.cv-item:hover{border-color:var(--accent)}
+.cv-item.selected{border-color:var(--accent);background:rgba(88,166,255,.08)}
+.tab-bar{display:flex;border-bottom:1px solid var(--border);margin-bottom:16px}
+.tab{padding:8px 16px;cursor:pointer;color:var(--muted);font-size:13px;border-bottom:2px solid transparent;margin-bottom:-1px}
+.tab.active{color:var(--accent);border-bottom-color:var(--accent)}
+.tab-content{display:none}
+.tab-content.active{display:block}
+.results-pre{background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:14px;font-size:12px;line-height:1.6;white-space:pre-wrap;word-break:break-word;max-height:500px;overflow-y:auto}
+.risk-high{color:var(--red);font-weight:700}
+.risk-medium{color:var(--yellow);font-weight:700}
+.risk-low{color:var(--green);font-weight:700}
+.toolbar{display:flex;align-items:center;gap:10px;margin-bottom:14px;flex-wrap:wrap}
+.toolbar input[type=text]{width:220px}
+.toolbar select{width:180px}
+.view-toggle{display:flex;border:1px solid var(--border);border-radius:6px;overflow:hidden}
+.view-btn{padding:6px 12px;cursor:pointer;background:var(--card);border:none;color:var(--muted);font-size:13px}
+.view-btn.active{background:rgba(88,166,255,.15);color:var(--accent)}
+.headline-option{border:1px solid var(--border);border-radius:6px;padding:12px;margin-bottom:8px;cursor:pointer;transition:.15s}
+.headline-option:hover{border-color:var(--accent);background:rgba(88,166,255,.04)}
+.headline-option .angle{font-size:11px;color:var(--muted);margin-top:4px}
+.progress-item{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid rgba(48,54,61,.5);font-size:12px}
+.pi-url{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--muted)}
+.copy-btn{background:none;border:1px solid var(--border);color:var(--muted);padding:3px 8px;border-radius:4px;cursor:pointer;font-size:11px}
+.copy-btn:hover{border-color:var(--accent);color:var(--accent)}
+.nav-badge{display:inline-flex;align-items:center;justify-content:center;background:var(--accent);color:#000;border-radius:10px;font-size:10px;font-weight:700;padding:1px 6px;margin-left:auto;min-width:18px}
+tr.deadline-soon td{background:rgba(248,81,73,.06)!important}
+tr.deadline-soon td:first-child{border-left:3px solid var(--red)}
+.quick-action-btn{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;padding:16px 12px;border:1px solid var(--border);border-radius:8px;background:var(--card);cursor:pointer;transition:.15s;font-size:12px;color:var(--muted);text-align:center;flex:1}
+.quick-action-btn:hover{border-color:var(--accent);color:var(--accent);background:rgba(88,166,255,.06)}
+.quick-action-btn .qa-icon{font-size:22px}
+.goal-section{display:flex;align-items:center;gap:12px;margin-bottom:16px}
+.goal-progress{flex:1;height:8px;background:var(--border);border-radius:4px;overflow:hidden}
+.goal-fill{height:100%;background:var(--green);border-radius:4px;transition:.4s}
+.recent-item{display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid rgba(48,54,61,.4)}
+.recent-item:last-child{border-bottom:none}
+.q-item{margin-bottom:14px}
+.q-item strong{font-size:13px;display:block;margin-bottom:5px}
+.answer-box{background:var(--bg);border-left:3px solid var(--accent);padding:10px;border-radius:0 6px 6px 0;font-size:12px;line-height:1.7;color:var(--muted)}
+a.btn{text-decoration:none}
+</style>
+</head>
+<body>
+
+<div id="authScreen" class="auth-screen">
+  <div class="card auth-card">
+    <div class="auth-logo">
+      <svg width="30" height="30" viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <rect width="200" height="200" rx="40" fill="#58a6ff"/>
+        <rect x="35" y="105" width="130" height="75" rx="10" fill="#0d1117"/>
+        <path d="M72 105V88C72 76 128 76 128 88V105" stroke="#0d1117" stroke-width="12" fill="none" stroke-linecap="round"/>
+        <rect x="35" y="138" width="130" height="5" fill="#58a6ff"/>
+        <rect x="82" y="125" width="36" height="26" rx="6" fill="#58a6ff"/>
+        <circle cx="100" cy="136" r="5" fill="#0d1117"/>
+        <rect x="97" y="136" width="6" height="9" rx="2" fill="#0d1117"/>
+      </svg>
+      <h1>Job Assistant</h1>
+    </div>
+    <div id="authError" class="alert alert-error" style="display:none"></div>
+    <div id="loginForm">
+      <div class="form-group"><label>Email</label><input type="email" id="loginEmail" placeholder="you@example.com" autocomplete="username"></div>
+      <div class="form-group"><label>Password</label><input type="password" id="loginPassword" placeholder="••••••••" autocomplete="current-password" onkeydown="if(event.key==='Enter')submitLogin()"></div>
+      <button class="btn btn-primary" style="width:100%;justify-content:center" onclick="submitLogin()">Log in</button>
+      <p style="margin-top:14px;font-size:12px;color:var(--muted);text-align:center">No account? <a href="#" onclick="toggleAuthMode();return false;" style="color:var(--accent)">Sign up</a></p>
+    </div>
+    <div id="signupForm" style="display:none">
+      <div class="form-group"><label>Name (optional)</label><input type="text" id="signupName" placeholder="Jane Doe"></div>
+      <div class="form-group"><label>Email</label><input type="email" id="signupEmail" placeholder="you@example.com" autocomplete="username"></div>
+      <div class="form-group"><label>Password</label><input type="password" id="signupPassword" placeholder="At least 8 characters" autocomplete="new-password" onkeydown="if(event.key==='Enter')submitSignup()"></div>
+      <button class="btn btn-primary" style="width:100%;justify-content:center" onclick="submitSignup()">Create account</button>
+      <p style="margin-top:14px;font-size:12px;color:var(--muted);text-align:center">Already have an account? <a href="#" onclick="toggleAuthMode();return false;" style="color:var(--accent)">Log in</a></p>
+    </div>
+  </div>
+</div>
+
+<div id="sidebar">
+  <div class="logo">
+    <div style="display:flex;align-items:center;gap:10px">
+      <svg width="34" height="34" viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg" style="flex-shrink:0">
+        <rect width="200" height="200" rx="40" fill="#58a6ff"/>
+        <rect x="35" y="105" width="130" height="75" rx="10" fill="#0d1117"/>
+        <path d="M72 105V88C72 76 128 76 128 88V105" stroke="#0d1117" stroke-width="12" fill="none" stroke-linecap="round"/>
+        <rect x="35" y="138" width="130" height="5" fill="#58a6ff"/>
+        <rect x="82" y="125" width="36" height="26" rx="6" fill="#58a6ff"/>
+        <circle cx="100" cy="136" r="5" fill="#0d1117"/>
+        <rect x="97" y="136" width="6" height="9" rx="2" fill="#0d1117"/>
+      </svg>
+      <h1 style="font-size:14px;font-weight:700;color:var(--accent);margin:0">Job Assistant</h1>
+    </div>
+  </div>
+  <div class="nav-item active" onclick="nav('dashboard')" data-page="dashboard"><span class="nav-icon">&#128202;</span>Dashboard</div>
+  <div class="nav-item" onclick="nav('apply')" data-page="apply"><span class="nav-icon">&#43;</span>New Application</div>
+  <div class="nav-item" onclick="nav('bulk')" data-page="bulk"><span class="nav-icon">&#9889;</span>Bulk Apply</div>
+  <div class="nav-item" onclick="nav('tracker')" data-page="tracker"><span class="nav-icon">&#128203;</span>Tracker<span class="nav-badge" id="trackerBadge" style="display:none">0</span></div>
+  <div class="nav-item" onclick="nav('analytics')" data-page="analytics"><span class="nav-icon">&#128200;</span>Analytics</div>
+  <div class="nav-item" onclick="nav('tools')" data-page="tools"><span class="nav-icon">&#128736;</span>Tools</div>
+  <div class="sidebar-footer">
+    <div id="userInfo">
+      <span id="userEmail"></span>
+      <span style="display:flex;gap:8px;flex-shrink:0">
+        <a href="#" onclick="openModal('pwModal');return false;" style="color:var(--accent)">Password</a>
+        <a href="#" onclick="doLogout();return false;" style="color:var(--accent)">Logout</a>
+      </span>
+    </div>
+    <div id="planInfo" style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;font-size:12px">
+      <span id="planBadge" class="badge badge-applied">Free</span>
+      <a href="#" id="billingLink" onclick="openCheckout();return false;" style="color:var(--accent)">Upgrade</a>
+    </div>
+    <div class="api-key-wrap">
+      <label>Groq API Key</label>
+      <input type="password" id="apiKey" placeholder="gsk_..." oninput="localStorage.setItem('apiKey',this.value)">
+    </div>
+  </div>
+</div>
+
+<div id="main">
+
+<!-- DASHBOARD -->
+<div class="page active" id="page-dashboard">
+  <h2>Dashboard</h2>
+  <div class="stats-grid">
+    <div class="stat-card"><div class="stat-num" id="statTotal">-</div><div class="stat-label">Total Applied</div></div>
+    <div class="stat-card"><div class="stat-num" id="statActive">-</div><div class="stat-label">Active</div></div>
+    <div class="stat-card"><div class="stat-num" id="statIR" style="color:var(--purple)">-%</div><div class="stat-label">Interview Rate</div></div>
+    <div class="stat-card"><div class="stat-num" id="statOR" style="color:var(--green)">-%</div><div class="stat-label">Offer Rate</div></div>
+  </div>
+  <div class="card" style="margin-bottom:16px">
+    <div class="card-title">Quick Actions</div>
+    <div style="display:flex;gap:10px">
+      <div class="quick-action-btn" onclick="nav('apply');goStep(1)"><span class="qa-icon">&#43;</span>New Application</div>
+      <div class="quick-action-btn" onclick="nav('tracker')"><span class="qa-icon">&#128203;</span>View Tracker</div>
+      <div class="quick-action-btn" onclick="nav('bulk')"><span class="qa-icon">&#9889;</span>Bulk Apply</div>
+      <div class="quick-action-btn" onclick="nav('analytics')"><span class="qa-icon">&#128200;</span>Analytics</div>
+      <div class="quick-action-btn" onclick="nav('tools')"><span class="qa-icon">&#128736;</span>Tools</div>
+    </div>
+  </div>
+  <div class="row">
+    <div style="flex:2">
+      <div class="card">
+        <div class="card-title">Weekly Goal</div>
+        <div class="goal-section">
+          <label style="margin:0;white-space:nowrap;color:var(--muted)">Target/week</label>
+          <input type="number" id="goalInput" value="5" min="1" max="50" style="width:70px;flex:none" onchange="saveGoal(this.value)">
+          <div class="goal-progress"><div class="goal-fill" id="goalFill" style="width:0%"></div></div>
+          <span id="goalText" style="font-size:12px;color:var(--muted);white-space:nowrap">0/5</span>
+        </div>
+        <div class="card-title">Activity — Last 52 Weeks</div>
+        <div class="heatmap-grid" id="heatmapGrid"></div>
+        <div style="display:flex;gap:6px;align-items:center;margin-top:8px;font-size:11px;color:var(--muted)">Less <span class="hm-cell" style="display:inline-block;width:10px;height:10px"></span><span class="hm-cell c1" style="display:inline-block;width:10px;height:10px"></span><span class="hm-cell c2" style="display:inline-block;width:10px;height:10px"></span><span class="hm-cell c3" style="display:inline-block;width:10px;height:10px"></span><span class="hm-cell c4" style="display:inline-block;width:10px;height:10px"></span> More</div>
+      </div>
+    </div>
+    <div style="flex:1">
+      <div class="card" style="height:calc(100% - 0px)">
+        <div class="card-title">Recent Applications</div>
+        <div id="recentList"><p style="color:var(--muted);font-size:13px">No applications yet.</p></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- NEW APPLICATION -->
+<div class="page" id="page-apply">
+  <h2>New Application</h2>
+  <div class="steps">
+    <div class="step active" id="s1">1. CV</div>
+    <div class="step" id="s2">2. Job Description</div>
+    <div class="step" id="s3">3. Analyze</div>
+    <div class="step" id="s4">4. Generate</div>
+    <div class="step" id="s5">5. Download</div>
+  </div>
+
+  <div class="step-content active" id="sc1">
+    <div class="card">
+      <div class="card-title">Select or Upload Your CV</div>
+      <div id="cvList" class="cv-list"><p style="color:var(--muted);font-size:13px">Loading...</p></div>
+      <div style="margin-top:14px;display:flex;gap:10px;align-items:center">
+        <input type="file" id="cvUpload" accept=".pdf,.docx" style="display:none" onchange="uploadCV(this)">
+        <button class="btn btn-secondary" onclick="document.getElementById('cvUpload').click()">&#128196; Upload New CV</button>
+        <span id="cvSelected" style="font-size:12px;color:var(--green)"></span>
+      </div>
+    </div>
+    <button class="btn btn-primary" onclick="goStep(2)">Next: Job Description &#8594;</button>
+  </div>
+
+  <div class="step-content" id="sc2">
+    <div class="card">
+      <div class="tab-bar">
+        <div class="tab active" onclick="showJdTab('paste')">Paste Text</div>
+        <div class="tab" onclick="showJdTab('url')">From URL</div>
+        <div class="tab" onclick="showJdTab('file')">Upload File</div>
+      </div>
+      <div id="jdt-paste">
+        <div class="form-group"><label>Paste the full job description</label><textarea id="jdText" rows="10" placeholder="Paste job description here..."></textarea></div>
+        <button class="btn btn-secondary" onclick="pasteJD()">Save Job Description</button>
+      </div>
+      <div id="jdt-url" style="display:none">
+        <div class="form-group"><label>Job posting URL</label><input type="url" id="jdUrl" placeholder="https://..."></div>
+        <button class="btn btn-secondary" onclick="fetchURL()">&#127760; Fetch from URL</button>
+      </div>
+      <div id="jdt-file" style="display:none">
+        <div class="form-group"><label>Upload job description file (.pdf/.docx/.txt)</label><input type="file" id="jdUpload" accept=".pdf,.docx,.txt" onchange="uploadJD(this)"></div>
+      </div>
+      <div id="jdStatus" style="margin-top:10px"></div>
+    </div>
+    <div style="display:flex;gap:10px">
+      <button class="btn btn-secondary" onclick="goStep(1)">&#8592; Back</button>
+      <button class="btn btn-primary" onclick="goStep(3)">Next: Analyze &#8594;</button>
+    </div>
+  </div>
+
+  <div class="step-content" id="sc3">
+    <div class="card">
+      <div class="card-title">AI Analysis</div>
+      <div id="analysisResult"></div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px">
+        <button class="btn btn-primary" id="analyzeBtn" onclick="runAnalyze()">&#129302; Analyze Job</button>
+        <button class="btn btn-secondary btn-sm" id="copyAnalysisBtn" style="display:none" onclick="copyAnalysis()">&#128203; Copy Summary</button>
+        <span id="step3Tools" style="display:none">
+          <button class="btn btn-secondary btn-sm" onclick="runMatchScore()">&#127919; Match Score</button>
+          <button class="btn btn-secondary btn-sm" onclick="runATS()">&#129302; ATS Score</button>
+          <button class="btn btn-secondary btn-sm" onclick="runRedFlags()">&#9888; Red Flags</button>
+          <button class="btn btn-secondary btn-sm" onclick="runCompanyResearch()">&#127970; Company Research</button>
+        </span>
+      </div>
+    </div>
+    <div style="display:flex;gap:10px;margin-top:4px">
+      <button class="btn btn-secondary" onclick="goStep(2)">&#8592; Back</button>
+      <button class="btn btn-primary" id="toStep4" disabled onclick="goStep(4)">Next: Generate &#8594;</button>
+    </div>
+  </div>
+
+  <div class="step-content" id="sc4">
+    <div class="card">
+      <div class="card-title">Generate Tailored Documents</div>
+      <div class="row">
+        <div class="form-group"><label>Job Title</label><input id="genTitle" placeholder="Senior Software Engineer"></div>
+        <div class="form-group"><label>Company</label><input id="genCompany" placeholder="Acme Corp"></div>
+      </div>
+      <div class="row">
+        <div class="form-group"><label>Your Name (for cover letter)</label><input id="genName" placeholder="Full Name"></div>
+        <div class="form-group"><label>Cover Letter Tone</label>
+          <select id="genTone"><option value="formal">Formal &amp; Professional</option><option value="confident">Confident &amp; Direct</option><option value="creative">Creative &amp; Engaging</option></select>
+        </div>
+      </div>
+      <button class="btn btn-primary" id="generateBtn" onclick="runGenerate()">&#9889; Generate CV + Cover Letter</button>
+      <div id="generateStatus" style="margin-top:12px"></div>
+    </div>
+    <button class="btn btn-secondary" onclick="goStep(3)">&#8592; Back</button>
+  </div>
+
+  <div class="step-content" id="sc5">
+    <div class="card">
+      <div class="card-title">Downloads</div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px">
+        <a class="btn btn-secondary" href="/api/download/cv">&#128196; CV (.docx)</a>
+        <a class="btn btn-secondary" href="/api/download/cv-pdf">&#128196; CV (.pdf)</a>
+        <a class="btn btn-secondary" href="/api/download/cl">&#128196; Cover Letter (.docx)</a>
+        <a class="btn btn-secondary" href="/api/download/cl-pdf">&#128196; Cover Letter (.pdf)</a>
+      </div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button class="btn btn-secondary btn-sm" onclick="previewDoc('cv')">&#128065; Preview CV</button>
+        <button class="btn btn-secondary btn-sm" onclick="previewDoc('cl')">&#128065; Preview Cover Letter</button>
+        <button class="btn btn-secondary btn-sm" onclick="openModal('interviewModal');runInterview()">&#127908; Interview Prep</button>
+        <button class="btn btn-secondary btn-sm" onclick="openModal('followupModal')">&#128140; Follow-up Email</button>
+        <button class="btn btn-secondary btn-sm" onclick="openModal('skillsModal');runSkillsRoadmap()">&#128218; Skills Roadmap</button>
+        <button class="btn btn-secondary btn-sm" onclick="openModal('clToneModal')">&#128203; Regen CL Tone</button>
+      </div>
+    </div>
+    <div style="display:flex;gap:10px">
+      <button class="btn btn-secondary" onclick="goStep(4)">&#8592; Back</button>
+      <button class="btn btn-green" onclick="resetApplication()">&#43; Start New Application</button>
+    </div>
+  </div>
+</div>
+
+<!-- BULK APPLY -->
+<div class="page" id="page-bulk">
+  <h2>Bulk Apply</h2>
+  <div class="card">
+    <div class="card-title">Apply to Multiple Jobs at Once (max 10)</div>
+    <div class="alert alert-warn">A CV must be selected in New Application first.</div>
+    <div class="form-group"><label>Job URLs — one per line</label><textarea id="bulkUrls" rows="8" placeholder="https://careers.company.com/job/123"></textarea></div>
+    <div class="form-group"><label>Your Name (for cover letters)</label><input id="bulkName"></div>
+    <button class="btn btn-primary" id="bulkBtn" onclick="runBulkApply()">&#9889; Start Bulk Apply</button>
+  </div>
+  <div class="card" id="bulkResults" style="display:none">
+    <div class="card-title">Progress</div>
+    <div id="bulkLog"></div>
+  </div>
+</div>
+
+<!-- TRACKER -->
+<div class="page" id="page-tracker">
+  <h2>Application Tracker</h2>
+  <div class="toolbar">
+    <input type="text" id="trackerSearch" placeholder="&#128269; Search..." oninput="renderTracker()" style="width:200px">
+    <select id="trackerFilter" onchange="renderTracker()">
+      <option value="">All Statuses</option>
+      <option>Applied</option><option>Interview Scheduled</option><option>Interviewed</option>
+      <option>Offer</option><option>Rejected</option><option>Withdrawn</option>
+    </select>
+    <div class="view-toggle">
+      <button class="view-btn active" id="viewTableBtn" onclick="setView('table')">&#9776; Table</button>
+      <button class="view-btn" id="viewKanbanBtn" onclick="setView('kanban')">&#9632; Kanban</button>
+    </div>
+    <button class="btn btn-secondary btn-sm" onclick="loadTracker()">&#8635; Refresh</button>
+    <a class="btn btn-secondary btn-sm" href="/api/tracker/excel">&#128196; Export Excel</a>
+    <button class="btn btn-secondary btn-sm" onclick="openModal('rejectionModal')">&#128165; Rejection Analyzer</button>
+  </div>
+  <div id="trackerTable"></div>
+  <div id="trackerKanban" style="display:none"></div>
+</div>
+
+<!-- ANALYTICS -->
+<div class="page" id="page-analytics">
+  <h2>Analytics</h2>
+  <div class="row">
+    <div style="flex:1"><div class="card"><div class="card-title">Status Breakdown</div><div id="statusChart"></div></div></div>
+    <div style="flex:1"><div class="card"><div class="card-title">Application Funnel</div><div id="funnelChart"></div></div></div>
+  </div>
+  <div class="card"><div class="card-title">Weekly Activity (last 26 weeks)</div><div class="bar-chart" id="weeklyChart"></div></div>
+  <div class="card"><div class="card-title">Activity Heatmap (full year)</div><div class="heatmap-grid" id="analyticsHeatmap"></div></div>
+</div>
+
+<!-- TOOLS -->
+<div class="page" id="page-tools">
+  <h2>Tools &amp; History</h2>
+  <div class="row" style="flex-wrap:wrap;margin-bottom:0">
+    <div style="flex:1;min-width:200px"><div class="card" style="cursor:pointer;transition:.15s" onmouseenter="this.style.borderColor='var(--accent)'" onmouseleave="this.style.borderColor=''" onclick="openModal('linkedinModal')">
+      <div style="font-size:28px;margin-bottom:8px">&#128100;</div><strong>LinkedIn Optimizer</strong>
+      <p style="color:var(--muted);font-size:12px;margin-top:6px">Optimize headline and about section for a target role.</p>
+    </div></div>
+    <div style="flex:1;min-width:200px"><div class="card" style="cursor:pointer;transition:.15s" onmouseenter="this.style.borderColor='var(--accent)'" onmouseleave="this.style.borderColor=''" onclick="openModal('salaryModal')">
+      <div style="font-size:28px;margin-bottom:8px">&#128176;</div><strong>Salary Negotiation</strong>
+      <p style="color:var(--muted);font-size:12px;margin-top:6px">AI scripts for salary negotiation conversations.</p>
+    </div></div>
+    <div style="flex:1;min-width:200px"><div class="card" style="cursor:pointer;transition:.15s" onmouseenter="this.style.borderColor='var(--accent)'" onmouseleave="this.style.borderColor=''" onclick="openModal('rejectionModal')">
+      <div style="font-size:28px;margin-bottom:8px">&#128165;</div><strong>Rejection Analyzer</strong>
+      <p style="color:var(--muted);font-size:12px;margin-top:6px">Understand rejections and improve future applications.</p>
+    </div></div>
+    <div style="flex:1;min-width:200px"><div class="card" style="cursor:pointer;transition:.15s" onmouseenter="this.style.borderColor='var(--accent)'" onmouseleave="this.style.borderColor=''" onclick="openModal('historyModal');loadHistory()">
+      <div style="font-size:28px;margin-bottom:8px">&#128196;</div><strong>Version History</strong>
+      <p style="color:var(--muted);font-size:12px;margin-top:6px">Browse all AI-generated CVs and cover letters.</p>
+    </div></div>
+  </div>
+  <div class="card" id="bookmarkletCard" style="display:none;margin-top:0">
+    <div class="card-title">Browser Bookmarklet</div>
+    <p style="font-size:13px;color:var(--muted);margin-bottom:10px">Drag to your bookmarks bar. Click on any job posting to auto-fill the URL here.</p>
+    <div style="display:flex;gap:10px;align-items:center">
+      <a id="bookmarkletLink" href="#" style="background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:8px 14px;color:var(--accent);text-decoration:none;font-size:13px">&#128188; Apply with Assistant</a>
+      <button class="btn btn-secondary btn-sm" onclick="navigator.clipboard.writeText(document.getElementById('bookmarkletLink').href);toast('Copied!','success')">Copy</button>
+    </div>
+  </div>
+  <div class="card" style="margin-top:0">
+    <div class="card-title">Keyboard Shortcuts</div>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;font-size:12px;color:var(--muted)">
+      <div><kbd style="background:var(--bg);border:1px solid var(--border);padding:2px 6px;border-radius:4px">Alt+D</kbd> Dashboard</div>
+      <div><kbd style="background:var(--bg);border:1px solid var(--border);padding:2px 6px;border-radius:4px">Alt+N</kbd> New Application</div>
+      <div><kbd style="background:var(--bg);border:1px solid var(--border);padding:2px 6px;border-radius:4px">Alt+B</kbd> Bulk Apply</div>
+      <div><kbd style="background:var(--bg);border:1px solid var(--border);padding:2px 6px;border-radius:4px">Alt+T</kbd> Tracker</div>
+      <div><kbd style="background:var(--bg);border:1px solid var(--border);padding:2px 6px;border-radius:4px">Alt+A</kbd> Analytics</div>
+      <div><kbd style="background:var(--bg);border:1px solid var(--border);padding:2px 6px;border-radius:4px">Alt+H</kbd> Tools</div>
+      <div><kbd style="background:var(--bg);border:1px solid var(--border);padding:2px 6px;border-radius:4px">Ctrl+Enter</kbd> Run action</div>
+    </div>
+  </div>
+</div>
+
+</div><!-- /main -->
+
+<!-- ── MODALS ─────────────────────────────────────────────────────────────── -->
+
+<div class="modal-overlay" id="pwModal">
+  <div class="modal" style="max-width:380px">
+    <div class="modal-header"><h3>Change Password</h3><button class="modal-close" onclick="closeModal('pwModal')">&#215;</button></div>
+    <div class="modal-body">
+      <div id="pwError" class="alert alert-error" style="display:none"></div>
+      <div class="form-group"><label>Current password</label><input type="password" id="pwCurrent" autocomplete="current-password"></div>
+      <div class="form-group"><label>New password</label><input type="password" id="pwNew" placeholder="At least 8 characters" autocomplete="new-password"></div>
+      <div class="form-group"><label>Confirm new password</label><input type="password" id="pwConfirm" autocomplete="new-password" onkeydown="if(event.key==='Enter')submitChangePassword()"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('pwModal')">Cancel</button>
+      <button class="btn btn-primary" onclick="submitChangePassword()">Update Password</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="atsModal">
+  <div class="modal"><div class="modal-header"><h3>&#129302; ATS Score</h3><button class="modal-close" onclick="closeModal('atsModal')">&#215;</button></div>
+  <div class="modal-body" id="atsBody"><div class="loading-row"><div class="spinner"></div>Analyzing...</div></div></div>
+</div>
+
+<div class="modal-overlay" id="redFlagsModal">
+  <div class="modal"><div class="modal-header"><h3>&#9888; Red Flag Detector</h3><button class="modal-close" onclick="closeModal('redFlagsModal')">&#215;</button></div>
+  <div class="modal-body" id="redFlagsBody"><div class="loading-row"><div class="spinner"></div>Scanning...</div></div></div>
+</div>
+
+<div class="modal-overlay" id="companyModal">
+  <div class="modal" style="max-width:760px"><div class="modal-header"><h3>&#127970; Company Research</h3><button class="modal-close" onclick="closeModal('companyModal')">&#215;</button></div>
+  <div class="modal-body" id="companyBody"><div class="loading-row"><div class="spinner"></div>Researching...</div></div></div>
+</div>
+
+<div class="modal-overlay" id="skillsModal">
+  <div class="modal" style="max-width:760px"><div class="modal-header"><h3>&#128218; Skills Roadmap</h3><button class="modal-close" onclick="closeModal('skillsModal')">&#215;</button></div>
+  <div class="modal-body" id="skillsBody"><div class="loading-row"><div class="spinner"></div>Building roadmap...</div></div></div>
+</div>
+
+<div class="modal-overlay" id="interviewModal">
+  <div class="modal" style="max-width:760px"><div class="modal-header"><h3>&#127908; Interview Preparation</h3><button class="modal-close" onclick="closeModal('interviewModal')">&#215;</button></div>
+  <div class="modal-body" id="interviewBody"><div class="loading-row"><div class="spinner"></div>Generating questions...</div></div></div>
+</div>
+
+<div class="modal-overlay" id="previewModal">
+  <div class="modal" style="max-width:800px"><div class="modal-header"><h3 id="previewTitle">Preview</h3><button class="modal-close" onclick="closeModal('previewModal')">&#215;</button></div>
+  <div class="modal-body"><div id="previewContent" class="results-pre"></div></div>
+  <div class="modal-footer"><button class="btn btn-secondary" onclick="closeModal('previewModal')">Close</button></div></div>
+</div>
+
+<div class="modal-overlay" id="followupModal">
+  <div class="modal"><div class="modal-header"><h3>&#128140; Follow-up Email</h3><button class="modal-close" onclick="closeModal('followupModal')">&#215;</button></div>
+  <div class="modal-body">
+    <div id="followupForm">
+      <div class="row"><div class="form-group"><label>Job Title</label><input id="fuTitle"></div><div class="form-group"><label>Company</label><input id="fuCompany"></div></div>
+      <div class="row"><div class="form-group"><label>Your Name</label><input id="fuName"></div><div class="form-group"><label>Days Since Applied</label><input id="fuDays" type="number" value="7"></div></div>
+      <div class="form-group"><label>Status</label><select id="fuStatus"><option>Applied</option><option>Interview Scheduled</option><option>Interviewed</option></select></div>
+      <div class="form-group"><label>Context (optional)</label><textarea id="fuContext" rows="3"></textarea></div>
+    </div>
+    <div id="followupResult" style="display:none"></div>
+  </div>
+  <div class="modal-footer"><button class="btn btn-secondary" onclick="closeModal('followupModal')">Close</button><button class="btn btn-primary" onclick="runFollowup()">&#9889; Generate</button></div></div>
+</div>
+
+<div class="modal-overlay" id="clToneModal">
+  <div class="modal"><div class="modal-header"><h3>&#128203; Regenerate Cover Letter</h3><button class="modal-close" onclick="closeModal('clToneModal')">&#215;</button></div>
+  <div class="modal-body">
+    <div class="form-group"><label>Tone</label><select id="clToneSelect"><option value="formal">Formal &amp; Professional</option><option value="confident">Confident &amp; Direct</option><option value="creative">Creative &amp; Engaging</option></select></div>
+    <div id="clToneResult"></div>
+  </div>
+  <div class="modal-footer"><button class="btn btn-secondary" onclick="closeModal('clToneModal')">Close</button><button class="btn btn-primary" onclick="runRegenCL()">&#9889; Regenerate</button></div></div>
+</div>
+
+<div class="modal-overlay" id="linkedinModal">
+  <div class="modal" style="max-width:760px"><div class="modal-header"><h3>&#128100; LinkedIn Optimizer</h3><button class="modal-close" onclick="closeModal('linkedinModal')">&#215;</button></div>
+  <div class="modal-body">
+    <div id="linkedinForm">
+      <div class="form-group"><label>Current Headline</label><input id="liHeadline" placeholder="Your current LinkedIn headline"></div>
+      <div class="form-group"><label>Current About Section</label><textarea id="liAbout" rows="6" placeholder="Your current About/Summary..."></textarea></div>
+      <div class="alert alert-info">Run Analyze first for role-specific optimization.</div>
+    </div>
+    <div id="linkedinResult" style="display:none"></div>
+  </div>
+  <div class="modal-footer"><button class="btn btn-secondary" onclick="closeModal('linkedinModal')">Close</button><button class="btn btn-primary" id="liBtn" onclick="runLinkedIn()">&#9889; Optimize</button></div></div>
+</div>
+
+<div class="modal-overlay" id="salaryModal">
+  <div class="modal"><div class="modal-header"><h3>&#128176; Salary Negotiation</h3><button class="modal-close" onclick="closeModal('salaryModal')">&#215;</button></div>
+  <div class="modal-body">
+    <div id="salaryForm">
+      <div class="row"><div class="form-group"><label>Job Title</label><input id="salTitle"></div><div class="form-group"><label>Company</label><input id="salCompany"></div></div>
+      <div class="row"><div class="form-group"><label>Offered Salary</label><input id="salOffered" placeholder="$80,000"></div><div class="form-group"><label>Target Salary</label><input id="salTarget" placeholder="$95,000"></div></div>
+      <div class="row"><div class="form-group"><label>Currency</label><input id="salCurrency" value="USD"></div><div class="form-group"><label>Response Deadline</label><input id="salDeadline" placeholder="e.g. Friday"></div></div>
+      <div class="form-group"><label>Your Key Strengths</label><input id="salStrengths" placeholder="5 years React, led team of 8..."></div>
+    </div>
+    <div id="salaryResult" style="display:none"></div>
+  </div>
+  <div class="modal-footer"><button class="btn btn-secondary" onclick="closeModal('salaryModal')">Close</button><button class="btn btn-primary" onclick="runSalary()">&#9889; Generate Scripts</button></div></div>
+</div>
+
+<div class="modal-overlay" id="rejectionModal">
+  <div class="modal"><div class="modal-header"><h3>&#128165; Rejection Analyzer</h3><button class="modal-close" onclick="closeModal('rejectionModal')">&#215;</button></div>
+  <div class="modal-body">
+    <div id="rejectionForm">
+      <div class="row"><div class="form-group"><label>Job Title</label><input id="rejTitle"></div><div class="form-group"><label>Company</label><input id="rejCompany"></div></div>
+      <div class="row">
+        <div class="form-group"><label>Stage</label><select id="rejStage"><option>initial screening</option><option>phone screen</option><option>technical interview</option><option>final interview</option><option>offer stage</option></select></div>
+        <div class="form-group"><label>Date Applied</label><input id="rejDate" type="date"></div>
+      </div>
+      <div class="form-group"><label>Feedback Received</label><textarea id="rejFeedback" rows="4" placeholder="Any feedback from recruiter..."></textarea></div>
+    </div>
+    <div id="rejectionResult" style="display:none"></div>
+  </div>
+  <div class="modal-footer"><button class="btn btn-secondary" onclick="closeModal('rejectionModal')">Close</button><button class="btn btn-primary" onclick="runRejection()">&#9889; Analyze</button></div></div>
+</div>
+
+<div class="modal-overlay" id="notesModal">
+  <div class="modal"><div class="modal-header"><h3>&#128221; Post-Interview Notes</h3><button class="modal-close" onclick="closeModal('notesModal')">&#215;</button></div>
+  <div class="modal-body"><div class="form-group"><label>Notes</label><textarea id="notesText" rows="8" placeholder="Interview impressions, questions asked, next steps..."></textarea></div></div>
+  <div class="modal-footer"><button class="btn btn-secondary" onclick="closeModal('notesModal')">Cancel</button><button class="btn btn-primary" onclick="saveNotes()">Save</button></div></div>
+</div>
+
+<div class="modal-overlay" id="historyModal">
+  <div class="modal" style="max-width:760px"><div class="modal-header"><h3>&#128196; Version History</h3><button class="modal-close" onclick="closeModal('historyModal')">&#215;</button></div>
+  <div class="modal-body">
+    <select id="historyFilter" onchange="loadHistory()" style="width:220px;margin-bottom:14px">
+      <option value="">All Types</option><option value="tailored_cv">Tailored CVs</option><option value="cover_letter">Cover Letters</option><option value="interview_questions">Interview Prep</option>
+    </select>
+    <div id="historyList"></div>
+  </div></div>
+</div>
+
+<div class="modal-overlay" id="histViewModal">
+  <div class="modal" style="max-width:800px"><div class="modal-header"><h3 id="histViewTitle">Document</h3><button class="modal-close" onclick="closeModal('histViewModal')">&#215;</button></div>
+  <div class="modal-body"><div id="histViewContent" class="results-pre"></div></div>
+  <div class="modal-footer"><button class="btn btn-secondary" onclick="closeModal('histViewModal')">Close</button></div></div>
+</div>
+
+<div id="toasts"></div>
+
+<script>
+// ── State ─────────────────────────────────────────────────────────────────────
+let trackerData=[], notesIdx=null, matchResult=null, analysisResult=null;
+let currentStep=1, trackerView='table';
+
+// ── Init ──────────────────────────────────────────────────────────────────────
+window.addEventListener('DOMContentLoaded',()=>{
+  checkAuth();
+});
+
+function apiKey(){return document.getElementById('apiKey').value.trim();}
+function saveGoal(v){localStorage.setItem('wGoal',v);loadDashboard();}
+
+// ── Auth ──────────────────────────────────────────────────────────────────────
+async function checkAuth(){
+  try{
+    const r=await fetch('/api/auth/me');
+    if(r.ok){
+      const user=await r.json();
+      showApp(user);
+    }else{
+      showAuthScreen();
+    }
+  }catch(e){
+    showAuthScreen();
+  }
+}
+
+function showAuthScreen(){
+  document.getElementById('authScreen').classList.add('open');
+  document.getElementById('sidebar').style.display='none';
+  document.getElementById('main').style.display='none';
+}
+
+function showApp(user){
+  document.getElementById('authScreen').classList.remove('open');
+  document.getElementById('sidebar').style.display='flex';
+  document.getElementById('main').style.display='block';
+  document.getElementById('userEmail').textContent=user.name?`${user.name} (${user.email})`:user.email;
+
+  document.getElementById('apiKey').value = localStorage.getItem('apiKey')||'';
+  document.getElementById('goalInput').value = localStorage.getItem('wGoal')||'5';
+  loadCVs(); loadDashboard(); loadBillingStatus();
+  if(window._bookmarkletUrl) setupBookmarklet(window._bookmarkletUrl);
+  document.getElementById('bookmarkletCard').style.display='block';
+  const bcode=`javascript:(function(){window.open(location.protocol+'//'+location.hostname+':8080/?bookmarklet_url='+encodeURIComponent(location.href),'_blank')})()`;
+  document.getElementById('bookmarkletLink').href=bcode;
+
+  const params=new URLSearchParams(location.search);
+  if(params.get('billing')==='success'){
+    toast('Payment successful — activating your Pro plan…','success');
+    history.replaceState({},'',location.pathname);
+  }else if(params.get('billing')==='cancel'){
+    toast('Checkout canceled','info');
+    history.replaceState({},'',location.pathname);
+  }
+}
+
+// ── Billing ───────────────────────────────────────────────────────────────────
+async function loadBillingStatus(){
+  try{
+    const s=await fetch('/api/billing/status').then(r=>r.json());
+    const badge=document.getElementById('planBadge'), link=document.getElementById('billingLink');
+    if(s.plan==='pro'){
+      badge.textContent='Pro'; badge.className='badge badge-offer';
+      link.textContent='Manage Billing';
+      link.onclick=function(){openBillingPortal();return false;};
+    }else{
+      badge.textContent=`Free (${s.generations_used}/${s.generations_limit})`; badge.className='badge badge-applied';
+      link.textContent='Upgrade';
+      link.onclick=function(){openCheckout();return false;};
+    }
+  }catch(e){}
+}
+
+async function openCheckout(){
+  try{
+    const j=await fetch('/api/billing/create-checkout-session',{method:'POST'}).then(r=>r.json());
+    if(j.url) window.location.href=j.url; else toast(j.error||'Could not start checkout','error');
+  }catch(e){toast('Error: '+e.message,'error');}
+}
+
+async function openBillingPortal(){
+  try{
+    const j=await fetch('/api/billing/create-portal-session',{method:'POST'}).then(r=>r.json());
+    if(j.url) window.location.href=j.url; else toast(j.error||'Could not open billing portal','error');
+  }catch(e){toast('Error: '+e.message,'error');}
+}
+
+function toggleAuthMode(){
+  const login=document.getElementById('loginForm'), signup=document.getElementById('signupForm');
+  const showingLogin=login.style.display!=='none';
+  login.style.display=showingLogin?'none':'block';
+  signup.style.display=showingLogin?'block':'none';
+  document.getElementById('authError').style.display='none';
+}
+
+function authError(msg){
+  const el=document.getElementById('authError');
+  el.textContent=msg;
+  el.style.display='block';
+}
+
+async function submitLogin(){
+  const email=document.getElementById('loginEmail').value.trim();
+  const password=document.getElementById('loginPassword').value;
+  try{
+    const r=await fetch('/api/auth/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email,password})});
+    const j=await r.json();
+    if(!r.ok) throw new Error(j.error||'Login failed');
+    showApp(j);
+  }catch(e){authError(e.message);}
+}
+
+async function submitSignup(){
+  const name=document.getElementById('signupName').value.trim();
+  const email=document.getElementById('signupEmail').value.trim();
+  const password=document.getElementById('signupPassword').value;
+  try{
+    const r=await fetch('/api/auth/signup',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name,email,password})});
+    const j=await r.json();
+    if(!r.ok) throw new Error(j.error||'Signup failed');
+    showApp(j);
+  }catch(e){authError(e.message);}
+}
+
+async function doLogout(){
+  try{await fetch('/api/auth/logout',{method:'POST'});}catch(e){}
+  showAuthScreen();
+}
+
+async function submitChangePassword(){
+  const current_password=document.getElementById('pwCurrent').value;
+  const new_password=document.getElementById('pwNew').value;
+  const confirm=document.getElementById('pwConfirm').value;
+  const err=document.getElementById('pwError');
+  err.style.display='none';
+  if(new_password!==confirm){err.textContent='New passwords do not match';err.style.display='block';return;}
+  try{
+    const r=await fetch('/api/auth/change-password',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({current_password,new_password})});
+    const j=await r.json();
+    if(!r.ok) throw new Error(j.error||'Failed to change password');
+    document.getElementById('pwCurrent').value='';
+    document.getElementById('pwNew').value='';
+    document.getElementById('pwConfirm').value='';
+    closeModal('pwModal');
+    toast('Password updated','success');
+  }catch(e){err.textContent=e.message;err.style.display='block';}
+}
+
+// ── Navigation ────────────────────────────────────────────────────────────────
+function nav(page){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  document.getElementById('page-'+page).classList.add('active');
+  document.querySelector('[data-page='+page+']').classList.add('active');
+  if(page==='tracker') loadTracker();
+  if(page==='analytics') loadAnalytics();
+  if(page==='dashboard') loadDashboard();
+}
+
+// ── JD Tabs ───────────────────────────────────────────────────────────────────
+function showJdTab(tab){
+  ['paste','url','file'].forEach(t=>{
+    document.getElementById('jdt-'+t).style.display=t===tab?'block':'none';
+  });
+  document.querySelectorAll('#sc2 .tab').forEach((el,i)=>{
+    el.classList.toggle('active',['paste','url','file'][i]===tab);
+  });
+}
+
+// ── Modals ────────────────────────────────────────────────────────────────────
+function openModal(id){document.getElementById(id).classList.add('open');}
+function closeModal(id){document.getElementById(id).classList.remove('open');}
+document.addEventListener('keydown',e=>{
+  if(e.key==='Escape') document.querySelectorAll('.modal-overlay.open').forEach(m=>m.classList.remove('open'));
+  if(e.altKey){const m={n:'apply',t:'tracker',d:'dashboard',a:'analytics',h:'tools',b:'bulk'};if(m[e.key]){nav(m[e.key]);e.preventDefault();}}
+  if((e.ctrlKey||e.metaKey)&&e.key==='Enter'){if(currentStep===3)runAnalyze();else if(currentStep===4)runGenerate();}
+});
+
+// ── Steps ─────────────────────────────────────────────────────────────────────
+function goStep(n){
+  document.querySelectorAll('.step-content').forEach(c=>c.classList.remove('active'));
+  document.getElementById('sc'+n).classList.add('active');
+  for(let i=1;i<=5;i++){
+    const s=document.getElementById('s'+i);
+    s.classList.remove('active','done');
+    if(i<n)s.classList.add('done');
+    else if(i===n)s.classList.add('active');
+  }
+  currentStep=n;
+}
+
+// ── Toast ─────────────────────────────────────────────────────────────────────
+function toast(msg,type='info'){
+  const el=document.createElement('div');
+  el.className='toast '+type;
+  el.textContent=(type==='success'?'✓ ':type==='error'?'✗ ':'ℹ ')+msg;
+  document.getElementById('toasts').appendChild(el);
+  setTimeout(()=>el.remove(),4000);
+}
+
+// ── API ───────────────────────────────────────────────────────────────────────
+async function api(url,body={},method='POST'){
+  const opts={method,headers:{'Content-Type':'application/json'}};
+  if(method!=='GET') opts.body=JSON.stringify({...body,api_key:apiKey()});
+  const r=await fetch(url,opts);
+  if(r.status===401){showAuthScreen();throw new Error('Session expired — please log in again');}
+  const j=await r.json();
+  if(r.status===402){toast(j.error||'Upgrade required','error');throw new Error(j.error||'Upgrade required');}
+  if(j.error) throw new Error(j.error);
+  return j;
+}
+
+// ── CV ────────────────────────────────────────────────────────────────────────
+async function loadCVs(){
+  try{
+    const names=await fetch('/api/cvs').then(r=>r.json());
+    const el=document.getElementById('cvList');
+    if(!names.length){el.innerHTML='<p style="color:var(--muted);font-size:13px">No CVs found. Upload one below.</p>';return;}
+    el.innerHTML=names.map(n=>`<div class="cv-item" onclick="selectCV('${n.replace(/'/g,"\\'")}',this)"><span style="font-size:18px">${n.endsWith('.pdf')?'📄':'📝'}</span><span>${n}</span></div>`).join('');
+  }catch(e){}
+}
+
+async function selectCV(name,el){
+  try{
+    await fetch('/api/select/cv',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name})});
+    document.querySelectorAll('.cv-item').forEach(i=>i.classList.remove('selected'));
+    el.classList.add('selected');
+    document.getElementById('cvSelected').textContent='✓ '+name;
+    toast('CV selected: '+name,'success');
+  }catch(e){toast('Error: '+e.message,'error');}
+}
+
+async function uploadCV(input){
+  const f=input.files[0];if(!f)return;
+  const fd=new FormData();fd.append('file',f);
+  try{
+    const r=await fetch('/api/upload/cv',{method:'POST',body:fd}).then(r=>r.json());
+    toast('Uploaded: '+r.name,'success');
+    loadCVs();
+    document.getElementById('cvSelected').textContent='✓ '+r.name;
+  }catch(e){toast('Upload failed','error');}
+}
+
+// ── JD ────────────────────────────────────────────────────────────────────────
+async function pasteJD(){
+  const text=document.getElementById('jdText').value.trim();
+  if(!text){toast('Paste job description first','error');return;}
+  try{
+    const r=await fetch('/api/paste/jd',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({text})}).then(r=>r.json());
+    if(r.error)throw new Error(r.error);
+    document.getElementById('jdStatus').innerHTML=`<div class="alert alert-success">✓ Saved (${r.words} words)</div>`;
+    toast('Job description saved','success');
+  }catch(e){toast('Error: '+e.message,'error');}
+}
+
+async function fetchURL(){
+  const url=document.getElementById('jdUrl').value.trim();
+  if(!url){toast('Enter a URL','error');return;}
+  document.getElementById('jdStatus').innerHTML='<div class="loading-row"><div class="spinner"></div>Fetching...</div>';
+  try{
+    const r=await fetch('/api/fetch-url',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({url})}).then(r=>r.json());
+    if(r.error)throw new Error(r.error);
+    document.getElementById('jdStatus').innerHTML=`<div class="alert alert-success">✓ Fetched (${r.words} words)</div>`;
+    toast('Job description fetched','success');
+  }catch(e){
+    document.getElementById('jdStatus').innerHTML=`<div class="alert alert-error">Error: ${e.message}</div>`;
+    toast('Fetch failed: '+e.message,'error');
+  }
+}
+
+async function uploadJD(input){
+  const f=input.files[0];if(!f)return;
+  const fd=new FormData();fd.append('file',f);
+  try{
+    const r=await fetch('/api/upload/jd',{method:'POST',body:fd}).then(r=>r.json());
+    if(r.error)throw new Error(r.error);
+    document.getElementById('jdStatus').innerHTML=`<div class="alert alert-success">✓ Uploaded: ${r.name}</div>`;
+    toast('JD uploaded','success');
+  }catch(e){toast('Upload failed','error');}
+}
+
+// ── Analyze ───────────────────────────────────────────────────────────────────
+async function runAnalyze(){
+  if(!apiKey()){toast('Enter API key','error');return;}
+  const btn=document.getElementById('analyzeBtn');
+  btn.disabled=true;btn.innerHTML='<span class="spinner"></span> Analyzing...';
+  document.getElementById('analysisResult').innerHTML='<div class="loading-row"><div class="spinner"></div>Analyzing job description...</div>';
+  try{
+    const r=await api('/api/analyze',{});
+    analysisResult=r;
+    document.getElementById('genTitle').value=r.title||'';
+    document.getElementById('genCompany').value=r.company||'';
+    document.getElementById('analysisResult').innerHTML=renderAnalysis(r);
+    document.getElementById('step3Tools').style.display='contents';
+    document.getElementById('copyAnalysisBtn').style.display='';
+    document.getElementById('toStep4').disabled=false;
+    toast('Analysis complete!','success');
+  }catch(e){
+    document.getElementById('analysisResult').innerHTML=`<div class="alert alert-error">Error: ${e.message}</div>`;
+    toast('Analysis failed: '+e.message,'error');
+  }finally{btn.disabled=false;btn.innerHTML='🤖 Re-analyze';}
+}
+
+function renderAnalysis(r){
+  return `<div class="alert alert-success"><strong>${r.title||'Role'}</strong> at <strong>${r.company||'Company'}</strong> · ${r.seniority_level||''} · ${r.location||''}</div>
+  <div class="row">
+    <div style="flex:1"><div class="card-title">Required Skills</div>${(r.required_skills||[]).map(s=>`<span class="tag">${s}</span>`).join('')}</div>
+    <div style="flex:1"><div class="card-title">Keywords</div>${(r.keywords||[]).map(s=>`<span class="tag">${s}</span>`).join('')}</div>
+  </div>
+  ${r.summary?`<p style="font-size:12px;color:var(--muted);margin-top:10px">${r.summary}</p>`:''}`;
+}
+
+// ── Match Score ───────────────────────────────────────────────────────────────
+async function runMatchScore(){
+  if(!apiKey()){toast('Enter API key','error');return;}
+  toast('Calculating match score...','info');
+  try{
+    const r=await api('/api/match-score',{});
+    matchResult=r;
+    const score=r.overall_score||0;
+    const color=score>=70?'var(--green)':score>=50?'var(--yellow)':'var(--red)';
+    const extra=`<div class="card" style="margin-top:12px"><div class="card-title">Match Score</div>
+      <div style="font-size:40px;font-weight:700;color:${color}">${score}%</div>
+      <div style="margin-top:8px">${(r.strengths||[]).map(s=>`<div style="font-size:12px;color:var(--green)">✓ ${s}</div>`).join('')}</div>
+      <div>${(r.gaps||[]).map(s=>`<div style="font-size:12px;color:var(--red)">✗ ${s}</div>`).join('')}</div>
+      ${(r.missing_skills||[]).length?`<button class="btn btn-secondary btn-sm" style="margin-top:8px" onclick="openModal('skillsModal');runSkillsRoadmap()">📚 Skills Roadmap</button>`:''}
+    </div>`;
+    document.getElementById('analysisResult').insertAdjacentHTML('beforeend',extra);
+    toast(`Match: ${score}%`,score>=70?'success':'info');
+  }catch(e){toast('Failed: '+e.message,'error');}
+}
+
+// ── ATS ───────────────────────────────────────────────────────────────────────
+async function runATS(){
+  if(!apiKey()){toast('Enter API key','error');return;}
+  openModal('atsModal');
+  document.getElementById('atsBody').innerHTML='<div class="loading-row"><div class="spinner"></div>Running ATS simulation...</div>';
+  try{
+    const r=await api('/api/ats-score',{});
+    const s=r.ats_score||0;
+    const c=s>=70?'var(--green)':s>=50?'var(--yellow)':'var(--red)';
+    let html=`<div style="text-align:center;margin-bottom:16px"><span style="font-size:48px;font-weight:700;color:${c}">${s}</span><span style="font-size:20px;color:var(--muted)">/100</span></div>`;
+    if(r.section_scores){
+      html+='<div class="card-title">Section Scores</div>';
+      for(const[k,v] of Object.entries(r.section_scores)){
+        const bc=v>=70?'var(--green)':v>=50?'var(--yellow)':'var(--red)';
+        html+=`<div class="section-score"><div class="name">${k.replace(/_/g,' ')}</div><div class="score-bar-wrap" style="width:120px"><div class="score-bar" style="width:${v}%;background:${bc}"></div></div><div class="val">${v}</div></div>`;
+      }
+    }
+    if(r.keyword_hits?.length) html+=`<div class="card-title" style="margin-top:12px">Keyword Hits</div>${r.keyword_hits.map(k=>`<span class="tag">${k}</span>`).join('')}`;
+    if(r.keyword_misses?.length) html+=`<div class="card-title" style="margin-top:12px">Missing Keywords</div>${r.keyword_misses.map(k=>`<span class="tag miss">${k}</span>`).join('')}`;
+    if(r.recommendations?.length) html+=`<div class="card-title" style="margin-top:12px">Recommendations</div>${r.recommendations.map(rec=>`<div style="font-size:12px;padding:5px 0;border-bottom:1px solid var(--border)">• ${rec}</div>`).join('')}`;
+    document.getElementById('atsBody').innerHTML=html;
+  }catch(e){document.getElementById('atsBody').innerHTML=`<div class="alert alert-error">Error: ${e.message}</div>`;}
+}
+
+// ── Red Flags ─────────────────────────────────────────────────────────────────
+async function runRedFlags(){
+  if(!apiKey()){toast('Enter API key','error');return;}
+  openModal('redFlagsModal');
+  document.getElementById('redFlagsBody').innerHTML='<div class="loading-row"><div class="spinner"></div>Scanning...</div>';
+  try{
+    const r=await api('/api/red-flags',{});
+    const rc=r.overall_risk==='high'?'risk-high':r.overall_risk==='medium'?'risk-medium':'risk-low';
+    let html=`<div class="card-title">Overall Risk: <span class="${rc}">${(r.overall_risk||'').toUpperCase()}</span></div><p style="margin-bottom:14px">${r.overall_verdict||''}</p>`;
+    (r.red_flags||[]).forEach(f=>{
+      const sc=f.severity==='high'?'risk-high':f.severity==='medium'?'risk-medium':'risk-low';
+      html+=`<div style="border:1px solid var(--border);border-radius:6px;padding:10px;margin-bottom:8px">
+        <div style="display:flex;justify-content:space-between"><strong>${f.flag||''}</strong><span class="${sc}">${f.severity||''}</span></div>
+        <div style="font-size:11px;color:var(--muted)">${f.category||''}</div>
+        ${f.quote?`<div style="font-size:11px;font-style:italic;margin-top:6px;color:var(--yellow)">"${f.quote}"</div>`:''}
+      </div>`;
+    });
+    if(r.positive_signals?.length) html+=`<div class="card-title" style="margin-top:12px">Positive Signals</div>${r.positive_signals.map(s=>`<div style="font-size:12px;color:var(--green)">✓ ${s}</div>`).join('')}`;
+    if(r.questions_to_investigate?.length) html+=`<div class="card-title" style="margin-top:12px">Questions to Ask</div>${r.questions_to_investigate.map(q=>`<div style="font-size:12px;padding:4px 0;border-bottom:1px solid var(--border)">? ${q}</div>`).join('')}`;
+    document.getElementById('redFlagsBody').innerHTML=html;
+  }catch(e){document.getElementById('redFlagsBody').innerHTML=`<div class="alert alert-error">Error: ${e.message}</div>`;}
+}
+
+// ── Company Research ──────────────────────────────────────────────────────────
+async function runCompanyResearch(){
+  if(!apiKey()){toast('Enter API key','error');return;}
+  openModal('companyModal');
+  document.getElementById('companyBody').innerHTML='<div class="loading-row"><div class="spinner"></div>Researching...</div>';
+  try{
+    const r=await api('/api/company-research',{});
+    const sections=[['overview','Overview'],['business_model','Business Model'],['culture_signals','Culture'],['tech_stack','Tech Stack'],['recent_news','Recent News'],['interview_tips','Interview Tips'],['talking_points','Talking Points'],['questions_to_ask','Questions to Ask'],['concerns','Concerns']];
+    let html='';
+    sections.forEach(([k,l])=>{
+      const v=r[k];if(!v)return;
+      html+=`<div class="card-title" style="margin-top:12px">${l}</div>`;
+      if(Array.isArray(v)) html+=v.map(x=>`<div style="font-size:12px;padding:4px 0;border-bottom:1px solid rgba(48,54,61,.4)">• ${x}</div>`).join('');
+      else html+=`<p style="font-size:13px;color:var(--muted)">${v}</p>`;
+    });
+    if(r.disclaimer) html+=`<div class="alert alert-warn" style="margin-top:12px;font-size:11px">${r.disclaimer}</div>`;
+    document.getElementById('companyBody').innerHTML=html;
+  }catch(e){document.getElementById('companyBody').innerHTML=`<div class="alert alert-error">Error: ${e.message}</div>`;}
+}
+
+// ── Skills Roadmap ────────────────────────────────────────────────────────────
+async function runSkillsRoadmap(){
+  if(!apiKey()){toast('Enter API key','error');return;}
+  document.getElementById('skillsBody').innerHTML='<div class="loading-row"><div class="spinner"></div>Building roadmap...</div>';
+  try{
+    const r=await api('/api/skills-roadmap',{missing_skills:matchResult?.missing_skills||[],matched_skills:matchResult?.matched_skills||[]});
+    let html='';
+    if(r.immediate_actions?.length){
+      html+='<div class="card-title">Immediate Actions</div>';
+      r.immediate_actions.forEach(a=>html+=`<div style="font-size:12px;padding:5px 0;border-bottom:1px solid var(--border);color:var(--orange)">⚡ ${a}</div>`);
+    }
+    if(r.roadmap?.length){
+      html+='<div class="card-title" style="margin-top:14px">Learning Roadmap</div>';
+      r.roadmap.forEach(item=>{
+        const pc=item.priority==='high'?'var(--red)':item.priority==='medium'?'var(--yellow)':'var(--green)';
+        html+=`<div style="border:1px solid var(--border);border-radius:6px;padding:12px;margin-bottom:8px">
+          <div style="display:flex;justify-content:space-between;margin-bottom:6px"><strong>${item.skill}</strong><span style="color:${pc};font-size:11px">${item.priority} · ~${item.weeks_estimate}w</span></div>
+          ${item.week_one_action?`<div style="font-size:12px;color:var(--accent)">Week 1: ${item.week_one_action}</div>`:''}
+          ${(item.resources||[]).map(res=>`<div style="font-size:11px;color:var(--muted)">→ ${res}</div>`).join('')}
+        </div>`;
+      });
+    }
+    if(r.total_weeks_estimate) html+=`<div class="alert alert-info" style="margin-top:12px">Estimated total: ${r.total_weeks_estimate} weeks</div>`;
+    document.getElementById('skillsBody').innerHTML=html||'<p style="color:var(--muted)">No gaps — great match!</p>';
+  }catch(e){document.getElementById('skillsBody').innerHTML=`<div class="alert alert-error">Error: ${e.message}</div>`;}
+}
+
+// ── Generate ──────────────────────────────────────────────────────────────────
+async function runGenerate(){
+  if(!apiKey()){toast('Enter API key','error');return;}
+  const btn=document.getElementById('generateBtn');
+  btn.disabled=true;btn.innerHTML='<span class="spinner"></span> Generating...';
+  document.getElementById('generateStatus').innerHTML='<div class="loading-row"><div class="spinner"></div>Tailoring CV + writing cover letter...</div>';
+  try{
+    const r=await api('/api/generate',{job_title:document.getElementById('genTitle').value,company:document.getElementById('genCompany').value,applicant_name:document.getElementById('genName').value,tone:document.getElementById('genTone').value});
+    document.getElementById('generateStatus').innerHTML=`<div class="alert alert-success">✓ <strong>${r.cv_filename}</strong> + <strong>${r.cl_filename}</strong></div>`;
+    toast('Documents generated!','success');
+    loadBillingStatus();
+    setTimeout(()=>goStep(5),900);
+  }catch(e){
+    document.getElementById('generateStatus').innerHTML=`<div class="alert alert-error">Error: ${e.message}</div>`;
+    toast('Failed: '+e.message,'error');
+  }finally{btn.disabled=false;btn.innerHTML='⚡ Generate CV + Cover Letter';}
+}
+
+// ── Interview ─────────────────────────────────────────────────────────────────
+async function runInterview(){
+  if(!apiKey()){document.getElementById('interviewBody').innerHTML='<div class="alert alert-error">Enter API key first</div>';return;}
+  document.getElementById('interviewBody').innerHTML='<div class="loading-row"><div class="spinner"></div>Generating questions...</div>';
+  try{
+    const r=await api('/api/interview-questions',{});
+    const cats=[['technical','Technical'],['behavioral','Behavioral'],['situational','Situational'],['company_role','Company & Role'],['to_ask_interviewer','Questions to Ask']];
+    let html='';
+    cats.forEach(([key,label])=>{
+      if(!r[key]?.length)return;
+      html+=`<div class="card-title" style="margin-top:14px">${label}</div>`;
+      r[key].forEach(q=>{
+        const qtext=typeof q==='object'?(q.question||q.text||JSON.stringify(q)):q;
+        const tip=typeof q==='object'?q.tip||q.guidance||'':'';
+        html+=`<div class="q-item"><strong>${qtext}</strong>${tip?`<div class="answer-box">${tip}</div>`:''}</div>`;
+      });
+    });
+    document.getElementById('interviewBody').innerHTML=html||'<p style="color:var(--muted)">No questions generated.</p>';
+  }catch(e){document.getElementById('interviewBody').innerHTML=`<div class="alert alert-error">Error: ${e.message}</div>`;}
+}
+
+// ── Followup ──────────────────────────────────────────────────────────────────
+async function runFollowup(){
+  if(!apiKey()){toast('Enter API key','error');return;}
+  try{
+    const r=await api('/api/followup-email',{job_title:document.getElementById('fuTitle').value,company:document.getElementById('fuCompany').value,applicant_name:document.getElementById('fuName').value,days_since:parseInt(document.getElementById('fuDays').value)||7,status:document.getElementById('fuStatus').value,context:document.getElementById('fuContext').value});
+    document.getElementById('followupForm').style.display='none';
+    const subj=(r.subject||'').replace(/"/g,'&quot;');
+    document.getElementById('followupResult').style.display='block';
+    document.getElementById('followupResult').innerHTML=`
+      <div class="form-group"><label>Subject</label><div style="display:flex;gap:8px"><input readonly value="${subj}" id="fuSOut"><button class="copy-btn" onclick="navigator.clipboard.writeText(document.getElementById('fuSOut').value);toast('Copied!','success')">Copy</button></div></div>
+      <div class="form-group"><label>Body</label><textarea readonly rows="10" id="fuBOut">${r.body||''}</textarea><button class="copy-btn" style="margin-top:6px" onclick="navigator.clipboard.writeText(document.getElementById('fuBOut').value);toast('Copied!','success')">Copy Body</button></div>
+      <button class="btn btn-secondary btn-sm" onclick="document.getElementById('followupForm').style.display='';document.getElementById('followupResult').style.display='none'">Edit</button>`;
+    toast('Email generated!','success');
+  }catch(e){toast('Failed: '+e.message,'error');}
+}
+
+// ── Regen CL ──────────────────────────────────────────────────────────────────
+async function runRegenCL(){
+  if(!apiKey()){toast('Enter API key','error');return;}
+  document.getElementById('clToneResult').innerHTML='<div class="loading-row"><div class="spinner"></div>Regenerating...</div>';
+  try{
+    const r=await api('/api/cover-letter/regenerate',{tone:document.getElementById('clToneSelect').value});
+    document.getElementById('clToneResult').innerHTML=`<div class="alert alert-success">✓ ${r.filename}</div><div class="results-pre" style="max-height:300px">${r.text}</div>`;
+    toast('Regenerated!','success');
+  }catch(e){document.getElementById('clToneResult').innerHTML=`<div class="alert alert-error">Error: ${e.message}</div>`;}
+}
+
+// ── Preview ───────────────────────────────────────────────────────────────────
+async function previewDoc(type){
+  openModal('previewModal');
+  document.getElementById('previewTitle').textContent=type==='cv'?'CV Preview':'Cover Letter Preview';
+  document.getElementById('previewContent').textContent='Loading...';
+  try{
+    const r=await fetch('/api/preview/'+type).then(r=>r.json());
+    if(r.error)throw new Error(r.error);
+    document.getElementById('previewContent').textContent=r.text;
+  }catch(e){document.getElementById('previewContent').textContent='Error: '+e.message;}
+}
+
+// ── Bulk Apply ────────────────────────────────────────────────────────────────
+async function runBulkApply(){
+  if(!apiKey()){toast('Enter API key','error');return;}
+  const raw=document.getElementById('bulkUrls').value.trim();
+  if(!raw){toast('Enter URLs','error');return;}
+  const urls=raw.split('\n').map(u=>u.trim()).filter(Boolean);
+  const btn=document.getElementById('bulkBtn');
+  btn.disabled=true;btn.innerHTML='<span class="spinner"></span> Processing...';
+  document.getElementById('bulkResults').style.display='block';
+  document.getElementById('bulkLog').innerHTML='';
+  try{
+    const resp=await fetch('/api/bulk-apply',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({urls,api_key:apiKey(),applicant_name:document.getElementById('bulkName').value})});
+    const reader=resp.body.getReader();const dec=new TextDecoder();let buf='';
+    while(true){
+      const{value,done}=await reader.read();if(done)break;
+      buf+=dec.decode(value);
+      const lines=buf.split('\n');buf=lines.pop();
+      for(const line of lines){
+        if(!line.startsWith('data:'))continue;
+        const d=JSON.parse(line.slice(5));
+        if(d.done){toast('Bulk apply complete!','success');break;}
+        const c=d.status==='done'?'var(--green)':d.status==='error'?'var(--red)':'var(--yellow)';
+        const el=document.getElementById('bi'+d.index);
+        const html=`<div class="progress-item" id="bi${d.index}"><span style="width:80px;text-align:center;color:${c}">${d.status}</span><div class="pi-url">${d.url}</div><span style="font-size:11px;color:var(--muted)">${d.company||''} ${d.title||''}</span></div>`;
+        if(el)el.outerHTML=html;else document.getElementById('bulkLog').insertAdjacentHTML('beforeend',html);
+      }
+    }
+  }catch(e){toast('Error: '+e.message,'error');}
+  finally{btn.disabled=false;btn.innerHTML='⚡ Start Bulk Apply';}
+}
+
+// ── Tracker ───────────────────────────────────────────────────────────────────
+async function loadTracker(){
+  try{trackerData=await fetch('/api/tracker').then(r=>r.json());renderTracker();updateTrackerBadge();}
+  catch(e){toast('Could not load tracker','error');}
+}
+
+function setView(v){
+  trackerView=v;
+  document.getElementById('viewTableBtn').classList.toggle('active',v==='table');
+  document.getElementById('viewKanbanBtn').classList.toggle('active',v==='kanban');
+  document.getElementById('trackerTable').style.display=v==='table'?'':'none';
+  document.getElementById('trackerKanban').style.display=v==='kanban'?'':'none';
+  renderTracker();
+}
+
+function renderTracker(){
+  const q=document.getElementById('trackerSearch').value.toLowerCase();
+  const fs=document.getElementById('trackerFilter').value;
+  const filtered=trackerData.map((r,i)=>({...r,_i:i})).filter(r=>{
+    const m=!q||(r.company+r.job_title+r.status).toLowerCase().includes(q);
+    return m&&(!fs||r.status===fs);
+  });
+  if(trackerView==='table') renderTable(filtered);
+  else renderKanban(filtered);
+}
+
+function badge(s){
+  const m={Applied:'applied','Interview Scheduled':'interview',Interviewed:'interviewed',Offer:'offer',Rejected:'rejected',Withdrawn:'withdrawn'};
+  return `<span class="badge badge-${m[s]||'applied'}">${s}</span>`;
+}
+
+function renderTable(rows){
+  if(!rows.length){document.getElementById('trackerTable').innerHTML='<p style="color:var(--muted);padding:20px">No applications found.</p>';return;}
+  const opts=['Applied','Interview Scheduled','Interviewed','Offer','Rejected','Withdrawn'].map(s=>`<option>${s}</option>`).join('');
+  let h=`<div style="overflow-x:auto"><table><thead><tr><th>Date</th><th>Company</th><th>Title</th><th>Status</th><th>Match</th><th>ATS</th><th>Notes</th><th>Actions</th></tr></thead><tbody>`;
+  rows.forEach(r=>{
+    const sopts=['Applied','Interview Scheduled','Interviewed','Offer','Rejected','Withdrawn'].map(s=>`<option ${r.status===s?'selected':''}>${s}</option>`).join('');
+    let urgentClass='';
+    if(r.deadline){try{const dl=new Date(r.deadline);const diff=(dl-new Date())/(86400000);if(diff>=0&&diff<=7)urgentClass='deadline-soon';}catch(e){}}
+    h+=`<tr class="${urgentClass}">
+      <td>${r.date_applied||''}</td>
+      <td><strong>${r.company||''}</strong></td>
+      <td style="max-width:200px">${r.job_title||''}</td>
+      <td><select style="background:var(--bg);border:1px solid var(--border);color:var(--text);padding:3px 6px;border-radius:4px;font-size:12px;width:auto" onchange="updateField(${r._i},'status',this.value)">${sopts}</select></td>
+      <td>${r.match_score?`<div><div class="score-bar-wrap"><div class="score-bar" style="width:${r.match_score}%"></div></div> <span style="font-size:11px">${r.match_score}%</span></div>`:'-'}</td>
+      <td>${r.ats_score?`<span style="color:${r.ats_score>=70?'var(--green)':r.ats_score>=50?'var(--yellow)':'var(--red)'};font-weight:600">${r.ats_score}</span>`:'-'}</td>
+      <td><input style="font-size:12px;padding:3px 6px;width:150px" value="${(r.notes||'').replace(/"/g,'&quot;')}" onchange="updateField(${r._i},'notes',this.value)"></td>
+      <td style="white-space:nowrap;display:flex;gap:4px">
+        <button class="btn btn-secondary btn-sm" title="Post-interview notes" onclick="openNotesModal(${r._i})">📝</button>
+        <button class="btn btn-danger btn-sm" onclick="deleteApp(${r._i})">🗑</button>
+      </td>
+    </tr>`;
+  });
+  h+='</tbody></table></div>';
+  document.getElementById('trackerTable').innerHTML=h;
+}
+
+function renderKanban(rows){
+  const cols=['Applied','Interview Scheduled','Interviewed','Offer','Rejected','Withdrawn'];
+  const g={};cols.forEach(c=>g[c]=[]);
+  rows.forEach(r=>{if(g[r.status!==undefined?r.status:'Applied'])g[r.status].push(r);});
+  let h='<div class="kanban">';
+  cols.forEach(col=>{
+    h+=`<div class="kanban-col" ondragover="event.preventDefault();this.classList.add('drag-over')" ondragleave="this.classList.remove('drag-over')" ondrop="dropCard(event,'${col}')">
+      <div class="kanban-col-header">${col} <span>(${g[col].length})</span></div><div class="kanban-col-body">`;
+    g[col].forEach(r=>h+=`<div class="kanban-card" draggable="true" ondragstart="dragStart(event,${r._i})"><div class="kc-title">${r.job_title||'Role'}</div><div class="kc-co">${r.company||''}</div>${r.date_applied?`<div style="font-size:10px;color:var(--muted);margin-top:4px">${r.date_applied}</div>`:''}</div>`);
+    h+='</div></div>';
+  });
+  h+='</div>';
+  document.getElementById('trackerKanban').innerHTML=h;
+}
+
+let dragIdx=null;
+function dragStart(e,i){dragIdx=i;}
+function dropCard(e,status){
+  e.currentTarget.classList.remove('drag-over');
+  if(dragIdx!==null){updateField(dragIdx,'status',status);dragIdx=null;}
+}
+
+async function updateField(idx,field,value){
+  try{
+    await fetch('/api/tracker/update-field',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({index:idx,field,value})});
+    trackerData[idx][field]=value;
+    if(field!=='notes')renderTracker();
+    toast('Saved','success');
+  }catch(e){toast('Update failed','error');}
+}
+
+async function deleteApp(idx){
+  if(!confirm('Delete this application?'))return;
+  try{
+    await fetch('/api/tracker/delete/'+idx,{method:'DELETE'});
+    trackerData.splice(idx,1);renderTracker();
+    toast('Deleted','success');
+  }catch(e){toast('Delete failed','error');}
+}
+
+function openNotesModal(i){
+  notesIdx=i;
+  document.getElementById('notesText').value=trackerData[i].post_interview_notes||'';
+  openModal('notesModal');
+}
+
+async function saveNotes(){
+  if(notesIdx===null)return;
+  await updateField(notesIdx,'post_interview_notes',document.getElementById('notesText').value);
+  closeModal('notesModal');
+}
+
+// ── Analytics ─────────────────────────────────────────────────────────────────
+async function loadAnalytics(){
+  try{
+    const r=await fetch('/api/tracker/analytics').then(r=>r.json());
+    renderStatusChart(r.by_status||{});
+    renderFunnel(r.funnel||[]);
+    renderWeekly(r.by_week||[]);
+    renderHeatmap('analyticsHeatmap',r.heatmap||[]);
+  }catch(e){}
+}
+
+function renderStatusChart(bs){
+  const el=document.getElementById('statusChart');
+  const total=Object.values(bs).reduce((a,b)=>a+b,0)||1;
+  const colors={Applied:'var(--accent)','Interview Scheduled':'var(--purple)',Interviewed:'var(--orange)',Offer:'var(--green)',Rejected:'var(--red)',Withdrawn:'var(--muted)'};
+  el.innerHTML=Object.entries(bs).map(([k,v])=>v?`<div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
+    <div style="width:10px;height:10px;border-radius:2px;background:${colors[k]||'var(--accent)'}"></div>
+    <div style="flex:1;font-size:13px">${k}</div>
+    <div class="score-bar-wrap" style="width:100px"><div class="score-bar" style="width:${v/total*100}%;background:${colors[k]||'var(--accent)'}"></div></div>
+    <div style="font-size:12px;font-weight:600;width:24px">${v}</div>
+  </div>`:''  ).join('');
+}
+
+function renderFunnel(funnel){
+  const max=funnel[0]?.count||1;
+  document.getElementById('funnelChart').innerHTML=funnel.map(f=>`<div class="funnel-row">
+    <div class="funnel-label">${f.status}</div>
+    <div class="funnel-bar-wrap"><div class="funnel-bar" style="width:${max?f.count/max*100:0}%">${f.count>0?f.count:''}</div></div>
+    <div class="funnel-count">${f.count}</div>
+  </div>`).join('');
+}
+
+function renderWeekly(byWeek){
+  const max=Math.max(...byWeek.map(w=>w.count),1);
+  document.getElementById('weeklyChart').innerHTML=byWeek.map(w=>`<div class="bar-item">
+    <div class="bar" style="height:${Math.round(w.count/max*70)+2}px;background:${w.count>0?'var(--accent)':'rgba(88,166,255,.15)'}"></div>
+    <div class="bar-label">${(w.week||'').split('-W')[1]||''}</div>
+  </div>`).join('');
+}
+
+function renderHeatmap(id,data){
+  document.getElementById(id).innerHTML=data.map(d=>{
+    const c=d.count===0?'':d.count===1?'c1':d.count<=3?'c2':d.count<=5?'c3':'c4';
+    return `<div class="hm-cell ${c}" title="${d.date}: ${d.count}"></div>`;
+  }).join('');
+}
+
+// ── Dashboard ─────────────────────────────────────────────────────────────────
+async function loadDashboard(){
+  try{
+    const r=await fetch('/api/tracker/analytics').then(r=>r.json());
+    trackerData=await fetch('/api/tracker').then(r=>r.json());
+    updateTrackerBadge();
+    document.getElementById('statTotal').textContent=r.total||0;
+    document.getElementById('statActive').textContent=r.active||0;
+    document.getElementById('statIR').textContent=(r.interview_rate||0)+'%';
+    document.getElementById('statOR').textContent=(r.offer_rate||0)+'%';
+    renderHeatmap('heatmapGrid',r.heatmap||[]);
+    const goal=parseInt(localStorage.getItem('wGoal')||'5');
+    const thisWeek=(r.by_week||[]).slice(-1)[0]?.count||0;
+    document.getElementById('goalFill').style.width=Math.min(thisWeek/goal*100,100)+'%';
+    document.getElementById('goalText').textContent=thisWeek+'/'+goal;
+    const recent=r.recent||[];
+    document.getElementById('recentList').innerHTML=recent.length
+      ?recent.map(x=>`<div class="recent-item"><div><div style="font-weight:600;font-size:13px">${x.company||''}</div><div style="font-size:12px;color:var(--muted)">${x.job_title||''}</div></div><div style="text-align:right">${badge(x.status||'Applied')}<div style="font-size:11px;color:var(--muted);margin-top:3px">${x.date_applied||''}</div></div></div>`).join('')
+      :'<p style="color:var(--muted);font-size:13px">No applications yet.</p>';
+  }catch(e){}
+}
+
+// ── LinkedIn ──────────────────────────────────────────────────────────────────
+async function runLinkedIn(){
+  if(!apiKey()){toast('Enter API key','error');return;}
+  const btn=document.getElementById('liBtn');
+  btn.disabled=true;btn.innerHTML='<span class="spinner"></span> Optimizing...';
+  try{
+    const r=await api('/api/linkedin-optimize',{headline:document.getElementById('liHeadline').value,about:document.getElementById('liAbout').value});
+    document.getElementById('linkedinForm').style.display='none';
+    let html='<div class="card-title">Headline Options (click to copy)</div>';
+    (r.headline_options||[]).forEach(h=>{
+      const safe=(h.text||'').replace(/\\/g,'\\\\').replace(/'/g,"\\'");
+      html+=`<div class="headline-option" onclick="navigator.clipboard.writeText('${safe}');toast('Copied!','success')"><div style="font-weight:600">${h.text||''}</div><div class="angle">${h.angle||''}</div></div>`;
+    });
+    if(r.about_section){
+      html+=`<div class="card-title" style="margin-top:14px">About Section</div><div class="results-pre" style="max-height:200px">${r.about_section}</div>`;
+      const abSafe=r.about_section.replace(/\\/g,'\\\\').replace(/`/g,'\\`');
+      html+=`<button class="copy-btn" style="margin-top:6px" onclick="navigator.clipboard.writeText(\`${abSafe}\`);toast('Copied!','success')">Copy About</button>`;
+    }
+    if(r.skills_to_add?.length) html+=`<div class="card-title" style="margin-top:14px">Skills to Add</div>${r.skills_to_add.map(s=>`<span class="tag">${s}</span>`).join('')}`;
+    if(r.quick_profile_wins?.length) html+=`<div class="card-title" style="margin-top:14px">Quick Wins</div>${r.quick_profile_wins.map(w=>`<div style="font-size:12px;padding:4px 0;border-bottom:1px solid var(--border)">• ${w}</div>`).join('')}`;
+    document.getElementById('linkedinResult').style.display='block';
+    document.getElementById('linkedinResult').innerHTML=html;
+  }catch(e){toast('Failed: '+e.message,'error');}
+  finally{btn.disabled=false;btn.innerHTML='⚡ Optimize';}
+}
+
+// ── Salary ────────────────────────────────────────────────────────────────────
+async function runSalary(){
+  if(!apiKey()){toast('Enter API key','error');return;}
+  try{
+    const r=await api('/api/salary-negotiation',{job_title:document.getElementById('salTitle').value,company:document.getElementById('salCompany').value,offered_salary:document.getElementById('salOffered').value,target_salary:document.getElementById('salTarget').value,currency:document.getElementById('salCurrency').value,deadline:document.getElementById('salDeadline').value,strengths:document.getElementById('salStrengths').value});
+    document.getElementById('salaryForm').style.display='none';
+    document.getElementById('salaryResult').style.display='block';
+    document.getElementById('salaryResult').innerHTML=`<div class="results-pre">${r.script||''}</div><button class="copy-btn" style="margin-top:8px" onclick="navigator.clipboard.writeText(this.previousElementSibling.textContent);toast('Copied!','success')">Copy All</button>`;
+    toast('Scripts generated!','success');
+  }catch(e){toast('Failed: '+e.message,'error');}
+}
+
+// ── Rejection ─────────────────────────────────────────────────────────────────
+async function runRejection(){
+  if(!apiKey()){toast('Enter API key','error');return;}
+  try{
+    const r=await api('/api/rejection-analysis',{job_title:document.getElementById('rejTitle').value,company:document.getElementById('rejCompany').value,stage:document.getElementById('rejStage').value,date_applied:document.getElementById('rejDate').value,feedback:document.getElementById('rejFeedback').value});
+    document.getElementById('rejectionForm').style.display='none';
+    document.getElementById('rejectionResult').style.display='block';
+    let html='';
+    if(r.likely_reasons?.length){
+      html+='<div class="card-title">Likely Reasons</div>';
+      r.likely_reasons.forEach(lr=>html+=`<div style="border:1px solid var(--border);border-radius:6px;padding:10px;margin-bottom:8px"><div style="display:flex;justify-content:space-between"><strong>${lr.reason||lr}</strong>${lr.probability?`<span style="color:var(--yellow)">${lr.probability}</span>`:''}</div>${lr.evidence?`<div style="font-size:12px;color:var(--muted);margin-top:4px">${lr.evidence}</div>`:''}</div>`);
+    }
+    if(r.cv_improvements?.length){
+      html+='<div class="card-title" style="margin-top:14px">CV Improvements</div>';
+      r.cv_improvements.forEach(ci=>html+=`<div style="font-size:12px;padding:6px 0;border-bottom:1px solid var(--border)"><strong>${ci.issue||ci}</strong>${ci.fix?`<div style="color:var(--green);margin-top:3px">Fix: ${ci.fix}</div>`:''}</div>`);
+    }
+    if(r.next_steps?.length) html+=`<div class="card-title" style="margin-top:14px">Next Steps</div>${r.next_steps.map(s=>`<div style="font-size:12px;padding:4px 0;color:var(--accent)">→ ${s}</div>`).join('')}`;
+    if(r.encouragement) html+=`<div class="alert alert-info" style="margin-top:12px">${r.encouragement}</div>`;
+    document.getElementById('rejectionResult').innerHTML=html;
+    toast('Analysis complete','success');
+  }catch(e){toast('Failed: '+e.message,'error');}
+}
+
+// ── Version History ───────────────────────────────────────────────────────────
+async function loadHistory(){
+  const type=document.getElementById('historyFilter').value;
+  try{
+    const recs=await fetch('/api/history'+(type?'?type='+type:'')).then(r=>r.json());
+    const el=document.getElementById('historyList');
+    if(!recs.length){el.innerHTML='<p style="color:var(--muted)">No history yet.</p>';return;}
+    el.innerHTML=recs.map(r=>`<div style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--border)">
+      <div style="flex:1"><div style="font-weight:600;font-size:13px">${r.company||''} — ${r.job_title||''}</div><div style="font-size:11px;color:var(--muted)">${r.type||''} · ${r.timestamp||''}</div><div style="font-size:11px;color:var(--muted);margin-top:2px">${(r.preview||'').substring(0,100)}...</div></div>
+      <button class="btn btn-secondary btn-sm" onclick="viewHistory('${r.id}','${(r.company||'').replace(/'/g,"\\'")} – ${(r.job_title||'').replace(/'/g,"\\'")}')">View</button>
+      <button class="btn btn-danger btn-sm" onclick="delHistory('${r.id}',this)">🗑</button>
+    </div>`).join('');
+  }catch(e){toast('Could not load history','error');}
+}
+
+async function viewHistory(vid,title){
+  openModal('histViewModal');
+  document.getElementById('histViewTitle').textContent=title;
+  document.getElementById('histViewContent').textContent='Loading...';
+  try{
+    const r=await fetch('/api/history/'+vid).then(r=>r.json());
+    document.getElementById('histViewContent').textContent=r.content||'Empty';
+  }catch(e){document.getElementById('histViewContent').textContent='Error';}
+}
+
+async function delHistory(vid,btn){
+  if(!confirm('Delete this version?'))return;
+  try{await fetch('/api/history/'+vid,{method:'DELETE'});btn.closest('div[style]').remove();toast('Deleted','success');}
+  catch(e){toast('Delete failed','error');}
+}
+
+// ── Tracker Badge ─────────────────────────────────────────────────────────────
+function updateTrackerBadge(){
+  const active=trackerData.filter(r=>!['Rejected','Withdrawn'].includes(r.status)).length;
+  const badge=document.getElementById('trackerBadge');
+  if(active>0){badge.textContent=active;badge.style.display='';}
+  else{badge.style.display='none';}
+}
+
+// ── Reset / Start New Application ─────────────────────────────────────────────
+function resetApplication(){
+  analysisResult=null;matchResult=null;
+  document.getElementById('jdText').value='';
+  document.getElementById('jdUrl').value='';
+  document.getElementById('jdStatus').innerHTML='';
+  document.getElementById('analysisResult').innerHTML='';
+  document.getElementById('generateStatus').innerHTML='';
+  document.getElementById('genTitle').value='';
+  document.getElementById('genCompany').value='';
+  document.getElementById('genName').value='';
+  document.getElementById('step3Tools').style.display='none';
+  document.getElementById('copyAnalysisBtn').style.display='none';
+  document.getElementById('toStep4').disabled=true;
+  document.getElementById('analyzeBtn').innerHTML='&#129302; Analyze Job';
+  nav('apply');goStep(1);
+  toast('Ready for a new application','info');
+}
+
+// ── Copy Analysis Summary ──────────────────────────────────────────────────────
+function copyAnalysis(){
+  if(!analysisResult){toast('No analysis to copy','error');return;}
+  const r=analysisResult;
+  const lines=[
+    `Role: ${r.title||''} at ${r.company||''}`,
+    `Seniority: ${r.seniority_level||''}`,
+    `Location: ${r.location||''}`,
+    ``,
+    `Required Skills: ${(r.required_skills||[]).join(', ')}`,
+    `Keywords: ${(r.keywords||[]).join(', ')}`,
+    r.summary?`\nSummary: ${r.summary}`:''
+  ];
+  navigator.clipboard.writeText(lines.join('\n'));
+  toast('Analysis copied to clipboard!','success');
+}
+
+// ── Bookmarklet ───────────────────────────────────────────────────────────────
+function setupBookmarklet(url){
+  if(url&&url!=='undefined'){
+    document.getElementById('jdUrl').value=url;
+    nav('apply');goStep(2);showJdTab('url');
+    toast('URL pre-filled from bookmarklet!','info');
+  }
+}
+</script>
+</body>
+</html>

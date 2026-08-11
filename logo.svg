@@ -1,0 +1,22 @@
+<svg width="200" height="200" viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background -->
+  <rect width="200" height="200" rx="40" fill="#58a6ff"/>
+  <!-- Briefcase body -->
+  <rect x="35" y="105" width="130" height="75" rx="10" fill="#0d1117"/>
+  <!-- Briefcase handle -->
+  <path d="M72 105V88C72 76 128 76 128 88V105"
+        stroke="#0d1117" stroke-width="12" fill="none" stroke-linecap="round"/>
+  <!-- Center divider line -->
+  <rect x="35" y="138" width="130" height="5" fill="#58a6ff"/>
+  <!-- Clasp -->
+  <rect x="82" y="125" width="36" height="26" rx="6" fill="#58a6ff"/>
+  <!-- Keyhole -->
+  <circle cx="100" cy="136" r="5" fill="#0d1117"/>
+  <rect x="97" y="136" width="6" height="9" rx="2" fill="#0d1117"/>
+  <!-- Stars / sparkles at top -->
+  <circle cx="55" cy="58" r="5" fill="#0d1117" opacity="0.6"/>
+  <circle cx="100" cy="42" r="7" fill="#0d1117" opacity="0.8"/>
+  <circle cx="145" cy="58" r="5" fill="#0d1117" opacity="0.6"/>
+  <circle cx="75" cy="75" r="3" fill="#0d1117" opacity="0.4"/>
+  <circle cx="125" cy="75" r="3" fill="#0d1117" opacity="0.4"/>
+</svg>

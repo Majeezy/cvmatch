@@ -1,0 +1,48 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+*.egg
+*.egg-info/
+dist/
+build/
+.eggs/
+.venv/
+venv/
+env/
+
+# Environment
+.env
+.env.local
+
+# Database
+*.db
+*.db-journal
+
+# User data (personal files — do not commit)
+master_cv/
+tailored_cvs/
+cover_letters/
+job_descriptions/
+applications_tracker/
+version_history/
+pdf_exports/
+
+# Excel exports
+*.xlsx
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Flask sessions
+flask_session/
