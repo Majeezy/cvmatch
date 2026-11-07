@@ -3,18 +3,26 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Job Application Assistant v2.0</title>
+<title>ORBITAL Careers</title>
+<link rel="icon" type="image/x-icon" href="/favicon.ico">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
-:root{--bg:#0d1117;--card:#161b22;--border:#30363d;--accent:#58a6ff;--green:#3fb950;--red:#f85149;--yellow:#d29922;--text:#e6edf3;--muted:#8b949e;--purple:#bc8cff;--orange:#ffa657}
-body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;display:flex;font-size:14px}
+/* ORBITAL brand system — Obsidian/Graphite dark theme, Electric Crimson as a
+   controlled accent (not the dominant color), Metallic Silver for secondary
+   emphasis. --green/--yellow/--purple/--orange stay as functional status
+   colors (application-tracker badges etc.), independent of the brand palette. */
+:root{--bg:#0B0B0B;--card:#1A1A1A;--border:#2A2A2A;--accent:#D7000F;--silver:#C0C0C0;--green:#3fb950;--red:#f85149;--yellow:#d29922;--text:#F5F5F5;--muted:#686F76;--purple:#bc8cff;--orange:#ffa657}
+body{font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;display:flex;font-size:14px}
 #sidebar{width:220px;min-width:220px;background:var(--card);border-right:1px solid var(--border);display:flex;flex-direction:column;padding:16px 0}
 .logo{padding:0 16px 16px;border-bottom:1px solid var(--border);margin-bottom:8px}
 .logo h1{font-size:15px;font-weight:700;color:var(--accent)}
 .logo span{font-size:11px;color:var(--muted)}
 .nav-item{display:flex;align-items:center;gap:10px;padding:9px 16px;cursor:pointer;color:var(--muted);transition:.15s;border-left:3px solid transparent;font-size:13px}
 .nav-item:hover{color:var(--text);background:rgba(255,255,255,.04)}
-.nav-item.active{color:var(--accent);border-left-color:var(--accent);background:rgba(88,166,255,.08)}
+.nav-item.active{color:var(--accent);border-left-color:var(--accent);background:rgba(215,0,15,.08)}
 .nav-icon{width:18px;text-align:center;font-size:15px}
 .sidebar-footer{margin-top:auto;padding:12px 16px;border-top:1px solid var(--border)}
 .api-key-wrap input{width:100%;background:var(--bg);border:1px solid var(--border);color:var(--text);padding:7px 10px;border-radius:6px;font-size:12px}
@@ -37,7 +45,7 @@ h2{font-size:18px;font-weight:600;margin-bottom:16px}
 .stat-num{font-size:28px;font-weight:700;color:var(--accent)}
 .stat-label{font-size:11px;color:var(--muted);margin-top:4px}
 .btn{display:inline-flex;align-items:center;gap:6px;padding:8px 16px;border-radius:6px;border:none;cursor:pointer;font-size:13px;font-weight:500;transition:.15s}
-.btn-primary{background:var(--accent);color:#000}
+.btn-primary{background:var(--accent);color:var(--text)}
 .btn-primary:hover{opacity:.85}
 .btn-secondary{background:transparent;border:1px solid var(--border);color:var(--text)}
 .btn-secondary:hover{border-color:var(--accent);color:var(--accent)}
@@ -53,17 +61,17 @@ label{font-size:12px;color:var(--muted);display:block;margin-bottom:5px}
 .steps{display:flex;margin-bottom:20px;overflow:hidden;border-radius:6px;border:1px solid var(--border)}
 .step{flex:1;padding:10px;text-align:center;font-size:12px;color:var(--muted);background:var(--card);cursor:pointer;border-right:1px solid var(--border)}
 .step:last-child{border-right:none}
-.step.active{background:rgba(88,166,255,.15);color:var(--accent);font-weight:600}
+.step.active{background:rgba(215,0,15,.15);color:var(--accent);font-weight:600}
 .step.done{background:rgba(63,185,80,.1);color:var(--green)}
 .step-content{display:none}
 .step-content.active{display:block}
 .alert{padding:10px 14px;border-radius:6px;font-size:13px;margin-bottom:12px}
-.alert-info{background:rgba(88,166,255,.1);border:1px solid rgba(88,166,255,.3);color:var(--accent)}
+.alert-info{background:rgba(215,0,15,.1);border:1px solid rgba(215,0,15,.3);color:var(--accent)}
 .alert-success{background:rgba(63,185,80,.1);border:1px solid rgba(63,185,80,.3);color:var(--green)}
 .alert-warn{background:rgba(210,153,34,.1);border:1px solid rgba(210,153,34,.3);color:var(--yellow)}
 .alert-error{background:rgba(248,81,73,.1);border:1px solid rgba(248,81,73,.3);color:var(--red)}
 .badge{display:inline-block;padding:2px 8px;border-radius:12px;font-size:11px;font-weight:600}
-.badge-applied{background:rgba(88,166,255,.2);color:var(--accent)}
+.badge-applied{background:rgba(215,0,15,.2);color:var(--accent)}
 .badge-interview{background:rgba(188,140,255,.2);color:var(--purple)}
 .badge-offer{background:rgba(63,185,80,.2);color:var(--green)}
 .badge-rejected{background:rgba(248,81,73,.2);color:var(--red)}
@@ -84,10 +92,10 @@ tr:hover td{background:rgba(255,255,255,.02)}
 .modal-close:hover{color:var(--text)}
 .modal-body{padding:20px;overflow-y:auto;flex:1}
 .modal-footer{padding:14px 20px;border-top:1px solid var(--border);display:flex;gap:8px;justify-content:flex-end}
-.spinner{display:inline-block;width:16px;height:16px;border:2px solid rgba(88,166,255,.3);border-top-color:var(--accent);border-radius:50%;animation:spin .8s linear infinite}
+.spinner{display:inline-block;width:16px;height:16px;border:2px solid rgba(215,0,15,.3);border-top-color:var(--accent);border-radius:50%;animation:spin .8s linear infinite}
 @keyframes spin{to{transform:rotate(360deg)}}
 .loading-row{display:flex;align-items:center;gap:10px;padding:16px;color:var(--muted)}
-.tag{display:inline-block;background:rgba(88,166,255,.1);color:var(--accent);border:1px solid rgba(88,166,255,.2);border-radius:4px;padding:2px 8px;font-size:11px;margin:2px}
+.tag{display:inline-block;background:rgba(215,0,15,.1);color:var(--accent);border:1px solid rgba(215,0,15,.2);border-radius:4px;padding:2px 8px;font-size:11px;margin:2px}
 .tag.miss{background:rgba(248,81,73,.1);color:var(--red);border-color:rgba(248,81,73,.2)}
 .section-score{display:flex;align-items:center;gap:10px;margin-bottom:8px}
 .section-score .name{flex:1;font-size:13px}
@@ -100,7 +108,7 @@ tr:hover td{background:rgba(255,255,255,.02)}
 .kanban-card:hover{border-color:var(--accent)}
 .kanban-card .kc-title{font-weight:600;margin-bottom:4px}
 .kanban-card .kc-co{color:var(--muted)}
-.kanban-col.drag-over{border-color:var(--accent);background:rgba(88,166,255,.05)}
+.kanban-col.drag-over{border-color:var(--accent);background:rgba(215,0,15,.05)}
 .heatmap-grid{display:grid;grid-template-columns:repeat(53,1fr);gap:2px;margin-top:8px}
 .hm-cell{width:100%;aspect-ratio:1;border-radius:2px;background:var(--border)}
 .hm-cell.c1{background:rgba(63,185,80,.3)}
@@ -109,11 +117,11 @@ tr:hover td{background:rgba(255,255,255,.02)}
 .hm-cell.c4{background:var(--green)}
 .bar-chart{display:flex;align-items:flex-end;gap:3px;height:80px;margin-top:8px}
 .bar-item{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px}
-.bar{width:100%;background:rgba(88,166,255,.4);border-radius:2px 2px 0 0;min-height:2px;transition:.3s}
+.bar{width:100%;background:rgba(215,0,15,.4);border-radius:2px 2px 0 0;min-height:2px;transition:.3s}
 .bar-label{font-size:9px;color:var(--muted);text-align:center}
 .funnel-row{display:flex;align-items:center;gap:12px;margin-bottom:8px}
 .funnel-bar-wrap{flex:1;height:22px;background:var(--border);border-radius:4px;overflow:hidden}
-.funnel-bar{height:100%;background:var(--accent);border-radius:4px;display:flex;align-items:center;padding-left:8px;font-size:11px;color:#000;font-weight:600;min-width:24px;transition:.4s}
+.funnel-bar{height:100%;background:var(--accent);border-radius:4px;display:flex;align-items:center;padding-left:8px;font-size:11px;color:var(--text);font-weight:600;min-width:24px;transition:.4s}
 .funnel-label{width:130px;font-size:12px;color:var(--muted)}
 .funnel-count{width:30px;text-align:right;font-size:12px;font-weight:600}
 #toasts{position:fixed;bottom:20px;right:20px;z-index:999;display:flex;flex-direction:column;gap:8px}
@@ -125,7 +133,7 @@ tr:hover td{background:rgba(255,255,255,.02)}
 .cv-list{display:grid;gap:6px;max-height:200px;overflow-y:auto}
 .cv-item{display:flex;align-items:center;gap:10px;padding:8px 12px;border:1px solid var(--border);border-radius:6px;cursor:pointer;transition:.15s}
 .cv-item:hover{border-color:var(--accent)}
-.cv-item.selected{border-color:var(--accent);background:rgba(88,166,255,.08)}
+.cv-item.selected{border-color:var(--accent);background:rgba(215,0,15,.08)}
 .tab-bar{display:flex;border-bottom:1px solid var(--border);margin-bottom:16px}
 .tab{padding:8px 16px;cursor:pointer;color:var(--muted);font-size:13px;border-bottom:2px solid transparent;margin-bottom:-1px}
 .tab.active{color:var(--accent);border-bottom-color:var(--accent)}
@@ -140,19 +148,19 @@ tr:hover td{background:rgba(255,255,255,.02)}
 .toolbar select{width:180px}
 .view-toggle{display:flex;border:1px solid var(--border);border-radius:6px;overflow:hidden}
 .view-btn{padding:6px 12px;cursor:pointer;background:var(--card);border:none;color:var(--muted);font-size:13px}
-.view-btn.active{background:rgba(88,166,255,.15);color:var(--accent)}
+.view-btn.active{background:rgba(215,0,15,.15);color:var(--accent)}
 .headline-option{border:1px solid var(--border);border-radius:6px;padding:12px;margin-bottom:8px;cursor:pointer;transition:.15s}
-.headline-option:hover{border-color:var(--accent);background:rgba(88,166,255,.04)}
+.headline-option:hover{border-color:var(--accent);background:rgba(215,0,15,.04)}
 .headline-option .angle{font-size:11px;color:var(--muted);margin-top:4px}
 .progress-item{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid rgba(48,54,61,.5);font-size:12px}
 .pi-url{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--muted)}
 .copy-btn{background:none;border:1px solid var(--border);color:var(--muted);padding:3px 8px;border-radius:4px;cursor:pointer;font-size:11px}
 .copy-btn:hover{border-color:var(--accent);color:var(--accent)}
-.nav-badge{display:inline-flex;align-items:center;justify-content:center;background:var(--accent);color:#000;border-radius:10px;font-size:10px;font-weight:700;padding:1px 6px;margin-left:auto;min-width:18px}
+.nav-badge{display:inline-flex;align-items:center;justify-content:center;background:var(--accent);color:var(--text);border-radius:10px;font-size:10px;font-weight:700;padding:1px 6px;margin-left:auto;min-width:18px}
 tr.deadline-soon td{background:rgba(248,81,73,.06)!important}
 tr.deadline-soon td:first-child{border-left:3px solid var(--red)}
 .quick-action-btn{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;padding:16px 12px;border:1px solid var(--border);border-radius:8px;background:var(--card);cursor:pointer;transition:.15s;font-size:12px;color:var(--muted);text-align:center;flex:1}
-.quick-action-btn:hover{border-color:var(--accent);color:var(--accent);background:rgba(88,166,255,.06)}
+.quick-action-btn:hover{border-color:var(--accent);color:var(--accent);background:rgba(215,0,15,.06)}
 .quick-action-btn .qa-icon{font-size:22px}
 .goal-section{display:flex;align-items:center;gap:12px;margin-bottom:16px}
 .goal-progress{flex:1;height:8px;background:var(--border);border-radius:4px;overflow:hidden}
@@ -169,17 +177,10 @@ a.btn{text-decoration:none}
 
 <div id="authScreen" class="auth-screen">
   <div class="card auth-card">
-    <div class="auth-logo">
-      <svg width="30" height="30" viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <rect width="200" height="200" rx="40" fill="#58a6ff"/>
-        <rect x="35" y="105" width="130" height="75" rx="10" fill="#0d1117"/>
-        <path d="M72 105V88C72 76 128 76 128 88V105" stroke="#0d1117" stroke-width="12" fill="none" stroke-linecap="round"/>
-        <rect x="35" y="138" width="130" height="5" fill="#58a6ff"/>
-        <rect x="82" y="125" width="36" height="26" rx="6" fill="#58a6ff"/>
-        <circle cx="100" cy="136" r="5" fill="#0d1117"/>
-        <rect x="97" y="136" width="6" height="9" rx="2" fill="#0d1117"/>
-      </svg>
-      <h1>Job Assistant</h1>
+    <div class="auth-logo" style="flex-direction:column;gap:4px">
+      <img src="/orbital-mark-small.png" alt="ORBITAL" style="height:46px;width:auto">
+      <h1 style="letter-spacing:.08em">ORBITAL <span style="color:var(--silver);font-weight:400">Careers</span></h1>
+      <p style="font-size:10px;letter-spacing:.2em;color:var(--muted);text-transform:uppercase;margin-top:2px">Connect. Secure. Build.</p>
     </div>
     <div id="authError" class="alert alert-error" style="display:none"></div>
     <div id="loginForm">
@@ -201,16 +202,11 @@ a.btn{text-decoration:none}
 <div id="sidebar">
   <div class="logo">
     <div style="display:flex;align-items:center;gap:10px">
-      <svg width="34" height="34" viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg" style="flex-shrink:0">
-        <rect width="200" height="200" rx="40" fill="#58a6ff"/>
-        <rect x="35" y="105" width="130" height="75" rx="10" fill="#0d1117"/>
-        <path d="M72 105V88C72 76 128 76 128 88V105" stroke="#0d1117" stroke-width="12" fill="none" stroke-linecap="round"/>
-        <rect x="35" y="138" width="130" height="5" fill="#58a6ff"/>
-        <rect x="82" y="125" width="36" height="26" rx="6" fill="#58a6ff"/>
-        <circle cx="100" cy="136" r="5" fill="#0d1117"/>
-        <rect x="97" y="136" width="6" height="9" rx="2" fill="#0d1117"/>
-      </svg>
-      <h1 style="font-size:14px;font-weight:700;color:var(--accent);margin:0">Job Assistant</h1>
+      <img src="/orbital-mark-small.png" alt="ORBITAL" style="height:28px;width:auto;flex-shrink:0">
+      <div>
+        <h1 style="font-size:14px;font-weight:700;color:var(--text);margin:0;letter-spacing:.04em">ORBITAL</h1>
+        <span style="font-size:10px;color:var(--muted);letter-spacing:.05em">Careers</span>
+      </div>
     </div>
   </div>
   <div class="nav-item active" onclick="nav('dashboard')" data-page="dashboard"><span class="nav-icon">&#128202;</span>Dashboard</div>
@@ -235,10 +231,16 @@ a.btn{text-decoration:none}
       <label>Groq API Key</label>
       <input type="password" id="apiKey" placeholder="gsk_..." oninput="localStorage.setItem('apiKey',this.value)">
     </div>
+    <p style="font-size:9px;letter-spacing:.15em;color:var(--border);text-transform:uppercase;text-align:center;margin-top:12px">Connect. Secure. Build.</p>
   </div>
 </div>
 
 <div id="main">
+
+<div id="verifyBanner" class="alert alert-info" style="display:none;align-items:center;justify-content:space-between;gap:12px">
+  <span>Verify your email to unlock upgrading to Pro.</span>
+  <a href="#" onclick="resendVerification();return false;" style="color:var(--accent);white-space:nowrap">Resend email</a>
+</div>
 
 <!-- DASHBOARD -->
 <div class="page active" id="page-dashboard">
@@ -670,6 +672,7 @@ function showApp(user){
   document.getElementById('sidebar').style.display='flex';
   document.getElementById('main').style.display='block';
   document.getElementById('userEmail').textContent=user.name?`${user.name} (${user.email})`:user.email;
+  document.getElementById('verifyBanner').style.display=user.email_verified?'none':'flex';
 
   document.getElementById('apiKey').value = localStorage.getItem('apiKey')||'';
   document.getElementById('goalInput').value = localStorage.getItem('wGoal')||'5';
@@ -686,6 +689,12 @@ function showApp(user){
   }else if(params.get('billing')==='cancel'){
     toast('Checkout canceled','info');
     history.replaceState({},'',location.pathname);
+  }else if(params.get('verify')==='success'){
+    toast('Email verified','success');
+    history.replaceState({},'',location.pathname);
+  }else if(params.get('verify')==='invalid'){
+    toast('That verification link is invalid or has expired','error');
+    history.replaceState({},'',location.pathname);
   }
 }
 
@@ -695,9 +704,9 @@ async function loadBillingStatus(){
     const s=await fetch('/api/billing/status').then(r=>r.json());
     const badge=document.getElementById('planBadge'), link=document.getElementById('billingLink');
     if(s.plan==='pro'){
-      badge.textContent='Pro'; badge.className='badge badge-offer';
-      link.textContent='Manage Billing';
-      link.onclick=function(){openBillingPortal();return false;};
+      badge.textContent=s.subscription_status==='cancelling'?'Pro (cancelling)':'Pro'; badge.className='badge badge-offer';
+      link.textContent='Cancel plan';
+      link.onclick=function(){cancelSubscription();return false;};
     }else{
       badge.textContent=`Free (${s.generations_used}/${s.generations_limit})`; badge.className='badge badge-applied';
       link.textContent='Upgrade';
@@ -713,10 +722,20 @@ async function openCheckout(){
   }catch(e){toast('Error: '+e.message,'error');}
 }
 
-async function openBillingPortal(){
+async function resendVerification(){
   try{
-    const j=await fetch('/api/billing/create-portal-session',{method:'POST'}).then(r=>r.json());
-    if(j.url) window.location.href=j.url; else toast(j.error||'Could not open billing portal','error');
+    const j=await fetch('/api/auth/resend-verification',{method:'POST'}).then(r=>r.json());
+    if(j.ok) toast('Verification email sent','success');
+    else toast(j.error||'Could not send verification email','error');
+  }catch(e){toast('Error: '+e.message,'error');}
+}
+
+async function cancelSubscription(){
+  if(!confirm('Cancel your Pro subscription? This stops future billing.')) return;
+  try{
+    const j=await fetch('/api/billing/cancel-subscription',{method:'POST'}).then(r=>r.json());
+    if(j.ok){ toast('Cancellation requested','success'); loadBillingStatus(); }
+    else toast(j.error||'Could not cancel subscription','error');
   }catch(e){toast('Error: '+e.message,'error');}
 }
 
@@ -1312,7 +1331,7 @@ function renderFunnel(funnel){
 function renderWeekly(byWeek){
   const max=Math.max(...byWeek.map(w=>w.count),1);
   document.getElementById('weeklyChart').innerHTML=byWeek.map(w=>`<div class="bar-item">
-    <div class="bar" style="height:${Math.round(w.count/max*70)+2}px;background:${w.count>0?'var(--accent)':'rgba(88,166,255,.15)'}"></div>
+    <div class="bar" style="height:${Math.round(w.count/max*70)+2}px;background:${w.count>0?'var(--accent)':'rgba(215,0,15,.15)'}"></div>
     <div class="bar-label">${(w.week||'').split('-W')[1]||''}</div>
   </div>`).join('');
 }
