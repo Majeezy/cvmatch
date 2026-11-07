@@ -1,7 +1,7 @@
-# ORBITAL Careers
+# CVMatch
 
-*Connect. Secure. Build.* — by [ORBITAL](https://github.com/Majeezy),
-Technology Engineering & Digital Solutions.
+By [ORBITAL](https://github.com/Majeezy), Technology Engineering & Digital
+Solutions. *Connect. Secure. Build.*
 
 A web app that tailors your CV and generates cover letters for each job
 application using AI (Groq's `llama-3.3-70b-versatile`), with an application
@@ -73,7 +73,7 @@ cancellation is a direct API call from the app's own UI, not a redirect.
 ## Project Structure
 
 ```
-job_application_assistant/        (directory name unchanged; app is ORBITAL Careers)
+job_application_assistant/        (directory name unchanged; app is CVMatch)
 ├── master_cv/            ← per-user uploaded CVs
 ├── job_descriptions/     ← per-user job postings
 ├── tailored_cvs/         ← per-user generated output

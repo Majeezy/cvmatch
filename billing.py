@@ -94,7 +94,7 @@ def payfast_checkout():
         email=current_user.email,
         name_first=current_user.name or "",
         amount_zar=PRO_PRICE_ZAR,
-        item_name="ORBITAL Careers Pro (monthly)",
+        item_name="CVMatch Pro (monthly)",
         return_url=f"{origin}/?billing=success",
         cancel_url=f"{origin}/?billing=cancel",
         notify_url=f"{origin}/webhook/payfast",

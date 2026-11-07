@@ -1,4 +1,4 @@
-# Deploying ORBITAL Careers to Render
+# Deploying CVMatch to Render
 
 ## 1. Set up PayFast (sandbox first)
 
@@ -53,7 +53,7 @@ the real sandbox while building this).
 
 This repo isn't connected to a remote yet. From the project folder:
 ```
-git remote add origin https://github.com/<you>/orbital-careers.git
+git remote add origin https://github.com/<you>/cvmatch.git
 git branch -M main
 git push -u origin main
 ```
@@ -76,7 +76,7 @@ git push -u origin main
    - `PAYFAST_MERCHANT_ID`, `PAYFAST_MERCHANT_KEY`, `PAYFAST_PASSPHRASE`
    - `RESEND_API_KEY`, `EMAIL_FROM`
 4. Deploy. Once live, your app is reachable at
-   `https://orbital-careers.onrender.com` (or whatever name you gave the
+   `https://cvmatch.onrender.com` (or whatever name you gave the
    service) with a free Render-issued HTTPS certificate.
 
 ## 5. Run the full PayFast lifecycle test against the live URL

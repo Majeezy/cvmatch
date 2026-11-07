@@ -1,4 +1,4 @@
-"""Flask web server — ORBITAL Careers (formerly Job Application Assistant).
+"""Flask web server — CVMatch, by ORBITAL (formerly Job Application Assistant).
 Run: python server.py
 """
 import json
@@ -829,7 +829,7 @@ if __name__ == "__main__":
 
     port = int(os.environ.get("PORT", 8080))
     print("\n  ==========================================")
-    print("   ORBITAL Careers")
+    print("   CVMatch, by ORBITAL")
     print(f"   Local: http://localhost:{port}")
     print("  ==========================================\n")
     serve(app, host="0.0.0.0", port=port)
