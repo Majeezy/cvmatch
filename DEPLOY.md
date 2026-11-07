@@ -61,23 +61,37 @@ git push -u origin main
 
 ## 4. Deploy the Render Blueprint
 
+`render.yaml` currently targets Render's **free tier for both the web
+service and the database — no credit card required at all.** Two real
+tradeoffs that come with that, both fine for testing, not fine for real
+users:
+- No persistent disk on the free web service plan — uploaded CVs and
+  generated documents live on the ephemeral filesystem and don't survive
+  a restart or redeploy. Upgrading to the Starter plan (~$7/month) and
+  adding a `disk:` block back is what fixes this when there's budget for
+  it and real users whose files need to actually persist.
+- The free Postgres database expires 30 days after creation, then is
+  permanently deleted 14 days after that (44 days total), with no
+  backups. Render emails you as both deadlines approach. Upgrade to a
+  paid Postgres plan before the 30-day mark if this deployment is still
+  around and has real data in it by then.
+
 1. In the [Render Dashboard](https://dashboard.render.com), click
    **New > Blueprint**, and point it at your GitHub repo — it will read
    `render.yaml` from the repo root automatically.
-2. Render provisions a Postgres database and a web service with a 1GB
-   persistent disk mounted at `/var/data` (this requires the web service's
-   **Starter** plan or above — persistent disks aren't available on Render's
-   free web service tier; this is the one recurring cost in this setup).
-3. `DATABASE_URL` and `DATA_DIR` are wired automatically by the blueprint.
-   `FLASK_SECRET` is auto-generated. You'll be prompted in the dashboard to
-   fill in the secrets marked `sync: false`:
+2. `DATABASE_URL` is wired automatically by the blueprint. `FLASK_SECRET`
+   is auto-generated. You'll be prompted in the dashboard to fill in the
+   secrets marked `sync: false`:
    - `GROQ_API_KEY` (optional — only needed as a server-side fallback if you
      want to support users who don't paste their own key)
    - `PAYFAST_MERCHANT_ID`, `PAYFAST_MERCHANT_KEY`, `PAYFAST_PASSPHRASE`
    - `RESEND_API_KEY`, `EMAIL_FROM`
-4. Deploy. Once live, your app is reachable at
+3. Deploy — no payment method needed. Once live, your app is reachable at
    `https://cvmatch.onrender.com` (or whatever name you gave the
-   service) with a free Render-issued HTTPS certificate.
+   service) with a free Render-issued HTTPS certificate. The free web
+   service also spins down after 15 minutes of no traffic and takes
+   about a minute to wake back up on the next request — expect that cold
+   start during testing, it's not a bug.
 
 ## 5. Run the full PayFast lifecycle test against the live URL
 

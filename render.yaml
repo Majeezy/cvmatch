@@ -8,16 +8,16 @@ services:
   - type: web
     name: cvmatch
     env: python
-    plan: starter # persistent disks require Starter or above, not the free plan
+    plan: free
+    # No persistent disk on the free plan -- uploaded CVs/generated docs
+    # live on the service's ephemeral filesystem and don't survive a
+    # restart or redeploy. Fine for testing the account/billing/webhook
+    # flow now; revisit with a Starter-plan disk (see git history for the
+    # prior version of this file) once there's budget and real users
+    # whose uploaded files need to actually persist.
     buildCommand: pip install -r requirements.txt
     startCommand: python server.py
-    disk:
-      name: cvmatch-data
-      mountPath: /var/data
-      sizeGB: 1
     envVars:
-      - key: DATA_DIR
-        value: /var/data
       - key: DATABASE_URL
         fromDatabase:
           name: cvmatch-db
@@ -25,7 +25,7 @@ services:
       - key: FLASK_SECRET
         generateValue: true
       - key: PAYFAST_SANDBOX
-        value: "false" # flip only once live PayFast credentials are actually in place below
+        value: "true" # flip to "false" only once testing has fully passed and live PayFast credentials are in place below
       - key: PAYFAST_PRO_PRICE_ZAR
         value: "99.00"
       # Filled in via the Render dashboard, never committed to the repo:
