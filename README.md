@@ -1,8 +1,12 @@
-# Job Application Assistant
+# ORBITAL Careers
+
+*Connect. Secure. Build.* — by [ORBITAL](https://github.com/Majeezy),
+Technology Engineering & Digital Solutions.
 
 A web app that tailors your CV and generates cover letters for each job
 application using AI (Groq's `llama-3.3-70b-versatile`), with an application
-tracker, ATS scoring, interview prep, and more.
+tracker, ATS scoring, interview prep, and more. Formerly "Job Application
+Assistant" — same backend, rebranded and hardened for real users.
 
 ## Quick Start
 
@@ -18,7 +22,8 @@ copy .env.example .env
 ```
 Open `.env` and set a `FLASK_SECRET` (a long random string — keep it stable,
 changing it logs everyone out). `GROQ_API_KEY` is optional: users can supply
-their own key in the browser instead.
+their own key in the browser instead. `PAYFAST_*` and `RESEND_API_KEY` are
+only needed to test billing/email verification locally — see `DEPLOY.md`.
 
 ### 3. Run
 ```bash
@@ -41,6 +46,10 @@ version history are isolated per account (see `models.py` for the `User`,
 live under per-user subfolders of `master_cv/`, `job_descriptions/`,
 `tailored_cvs/`, and `cover_letters/`.
 
+Signup sends a verification email (Resend). Upgrading to Pro is gated on
+`email_verified` — an account can use the free tier unverified, but can't
+pay until it's confirmed.
+
 If you have data from an older single-user version of this app (a flat
 `applications_tracker/applications.json` with no owner), run:
 ```bash
@@ -50,10 +59,21 @@ after creating your account, to import it under that account.
 
 ---
 
+## Billing
+
+PayFast (South African, ZAR-native — Stripe doesn't support direct South
+African merchant accounts, and Yoco doesn't support recurring billing; see
+`DEPLOY.md` §1 for setup, and `payfast.py`'s module docstring for what's
+been verified against PayFast's real sandbox vs. what's still unverified).
+PayFast has no hosted customer portal like Stripe's, so subscription
+cancellation is a direct API call from the app's own UI, not a redirect.
+
+---
+
 ## Project Structure
 
 ```
-job_application_assistant/
+job_application_assistant/        (directory name unchanged; app is ORBITAL Careers)
 ├── master_cv/            ← per-user uploaded CVs
 ├── job_descriptions/     ← per-user job postings
 ├── tailored_cvs/         ← per-user generated output
@@ -69,10 +89,13 @@ job_application_assistant/
 │   └── ...                   ← ATS score, match score, interview prep, etc.
 ├── legacy/                ← retired Streamlit UI + old CLI, kept for reference
 ├── models.py               ← SQLAlchemy models (User, Application, VersionHistoryEntry)
-├── auth.py                 ← signup/login/logout routes
+├── auth.py                 ← signup/login/logout/email-verification routes
+├── billing.py               ← PayFast checkout + webhook (Flask blueprint layer)
+├── payfast.py                ← PayFast signing/validation/API client (no Flask dependency)
+├── email_sender.py           ← Resend transactional email (verification only, so far)
 ├── config.py
 ├── server.py                ← Flask app (the actual web server)
 ├── migrate_legacy_data.py   ← one-off import of old single-user tracker data
 ├── requirements.txt
-└── .env                     ← FLASK_SECRET / GROQ_API_KEY (never commit this)
+└── .env                     ← secrets (never commit this)
 ```
