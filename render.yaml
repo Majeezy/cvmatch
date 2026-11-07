@@ -1,18 +1,18 @@
 databases:
-  - name: job-application-assistant-db
+  - name: orbital-careers-db
     plan: free
-    databaseName: job_app_assistant
-    user: job_app_assistant
+    databaseName: orbital_careers
+    user: orbital_careers
 
 services:
   - type: web
-    name: job-application-assistant
+    name: orbital-careers
     env: python
     plan: starter # persistent disks require Starter or above, not the free plan
     buildCommand: pip install -r requirements.txt
     startCommand: python server.py
     disk:
-      name: job-app-data
+      name: orbital-careers-data
       mountPath: /var/data
       sizeGB: 1
     envVars:
@@ -20,16 +20,24 @@ services:
         value: /var/data
       - key: DATABASE_URL
         fromDatabase:
-          name: job-application-assistant-db
+          name: orbital-careers-db
           property: connectionString
       - key: FLASK_SECRET
         generateValue: true
+      - key: PAYFAST_SANDBOX
+        value: "false" # flip only once live PayFast credentials are actually in place below
+      - key: PAYFAST_PRO_PRICE_ZAR
+        value: "99.00"
       # Filled in via the Render dashboard, never committed to the repo:
       - key: GROQ_API_KEY
         sync: false
-      - key: STRIPE_SECRET_KEY
+      - key: PAYFAST_MERCHANT_ID
         sync: false
-      - key: STRIPE_WEBHOOK_SECRET
+      - key: PAYFAST_MERCHANT_KEY
         sync: false
-      - key: STRIPE_PRICE_ID
+      - key: PAYFAST_PASSPHRASE
+        sync: false
+      - key: RESEND_API_KEY
+        sync: false
+      - key: EMAIL_FROM
         sync: false

@@ -17,9 +17,15 @@ class User(UserMixin, db.Model):
     name = db.Column(db.String(255), default="")
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
+    email_verified = db.Column(db.Boolean, nullable=False, default=False)
+    email_verify_token = db.Column(db.String(64), nullable=True, index=True)
+    email_verify_sent_at = db.Column(db.DateTime, nullable=True)
+
     plan = db.Column(db.String(20), nullable=False, default="free")
-    stripe_customer_id = db.Column(db.String(255), nullable=True, index=True)
-    stripe_subscription_id = db.Column(db.String(255), nullable=True)
+    # PayFast identifies a recurring subscription by an opaque token (sent
+    # back on the first ITN after signup), not a "customer" object the way
+    # Stripe does -- there's no separate customer id to store.
+    payfast_token = db.Column(db.String(255), nullable=True, index=True)
     subscription_status = db.Column(db.String(50), nullable=True)
 
     def set_password(self, password: str) -> None:

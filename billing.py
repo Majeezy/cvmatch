@@ -1,22 +1,28 @@
-"""Stripe billing — checkout, billing portal, webhook, plan/usage status."""
+"""PayFast billing — checkout redirect, ITN webhook, plan/usage status.
+
+PayFast has no hosted customer portal the way Stripe does, so "Manage
+billing" becomes a direct cancel action against the Subscriptions API
+(see payfast.py) rather than a redirect to a provider-hosted page.
+
+Plan state (`User.plan`) only ever changes from the ITN webhook handler,
+never from a frontend success callback -- a browser landing back on
+`return_url` after PayFast checkout proves the user's browser was
+redirected there, not that the payment actually completed.
+"""
 import os
 from datetime import date
 
-import stripe
-from flask import Blueprint, jsonify, request
+from flask import Blueprint, Response, jsonify, request
 from flask_login import current_user, login_required
 
+import payfast
 from config import FREE_MONTHLY_GENERATIONS
 from models import Application, User, db
 
-stripe.api_key = os.environ.get("STRIPE_SECRET_KEY", "")
-_PRICE_ID = os.environ.get("STRIPE_PRICE_ID", "")
-_WEBHOOK_SECRET = os.environ.get("STRIPE_WEBHOOK_SECRET", "")
-
-_ACTIVE_STATUSES = {"active", "trialing"}
+PRO_PRICE_ZAR = os.environ.get("PAYFAST_PRO_PRICE_ZAR", "99.00")
 
 billing_bp = Blueprint("billing", __name__, url_prefix="/api/billing")
-webhook_bp = Blueprint("stripe_webhook", __name__)
+webhook_bp = Blueprint("payfast_webhook", __name__)
 
 
 def init_billing(app):
@@ -68,87 +74,109 @@ def status():
 @billing_bp.route("/create-checkout-session", methods=["POST"])
 @login_required
 def create_checkout_session():
-    if not _PRICE_ID:
+    if not payfast.MERCHANT_ID or not payfast.MERCHANT_KEY:
         return jsonify({"error": "Billing is not configured yet"}), 500
-    try:
-        if not current_user.stripe_customer_id:
-            customer = stripe.Customer.create(email=current_user.email, name=current_user.name or None)
-            current_user.stripe_customer_id = customer.id
-            db.session.commit()
-
-        origin = _origin()
-        checkout_session = stripe.checkout.Session.create(
-            mode="subscription",
-            customer=current_user.stripe_customer_id,
-            client_reference_id=str(current_user.id),
-            line_items=[{"price": _PRICE_ID, "quantity": 1}],
-            success_url=f"{origin}/?billing=success",
-            cancel_url=f"{origin}/?billing=cancel",
-        )
-        return jsonify({"url": checkout_session.url})
-    except stripe.error.StripeError as e:
-        return jsonify({"error": str(e)}), 500
+    if not current_user.email_verified:
+        return jsonify({"error": "Please verify your email before upgrading"}), 403
+    # The actual signed form POST happens when the browser is sent to this
+    # route (below) -- PayFast requires POSTed form fields, not a redirect
+    # URL with query params, so there's no single "checkout URL" to hand
+    # back the way Stripe's Checkout Session has.
+    return jsonify({"url": "/api/billing/payfast-checkout"})
 
 
-@billing_bp.route("/create-portal-session", methods=["POST"])
+@billing_bp.route("/payfast-checkout")
 @login_required
-def create_portal_session():
-    if not current_user.stripe_customer_id:
-        return jsonify({"error": "No billing account yet"}), 400
-    try:
-        portal_session = stripe.billing_portal.Session.create(
-            customer=current_user.stripe_customer_id,
-            return_url=f"{_origin()}/",
-        )
-        return jsonify({"url": portal_session.url})
-    except stripe.error.StripeError as e:
-        return jsonify({"error": str(e)}), 500
+def payfast_checkout():
+    origin = _origin()
+    fields = payfast.build_subscription_checkout_fields(
+        user_id=current_user.id,
+        email=current_user.email,
+        name_first=current_user.name or "",
+        amount_zar=PRO_PRICE_ZAR,
+        item_name="ORBITAL Careers Pro (monthly)",
+        return_url=f"{origin}/?billing=success",
+        cancel_url=f"{origin}/?billing=cancel",
+        notify_url=f"{origin}/webhook/payfast",
+    )
+    inputs = "\n".join(
+        f'<input type="hidden" name="{key}" value="{str(value).replace(chr(34), "&quot;")}">'
+        for key, value in fields.items()
+    )
+    # Auto-submitting form -- the standard PayFast "Custom Integration"
+    # pattern. No styling needed, this page is on screen for a fraction of
+    # a second before the redirect fires.
+    html = f"""<!DOCTYPE html><html><body>
+<form id="pfForm" action="{payfast.PROCESS_URL}" method="post">{inputs}</form>
+<script>document.getElementById('pfForm').submit();</script>
+Redirecting to PayFast...
+</body></html>"""
+    return Response(html, mimetype="text/html")
 
 
-def _find_user(client_reference_id, stripe_customer_id) -> User | None:
-    if client_reference_id:
-        user = db.session.get(User, int(client_reference_id))
-        if user:
-            return user
-    if stripe_customer_id:
-        return User.query.filter_by(stripe_customer_id=stripe_customer_id).first()
-    return None
+@billing_bp.route("/cancel-subscription", methods=["POST"])
+@login_required
+def cancel_subscription_route():
+    if not current_user.payfast_token:
+        return jsonify({"error": "No active subscription to cancel"}), 400
+    ok = payfast.cancel_subscription(current_user.payfast_token)
+    if not ok:
+        return jsonify({"error": "Could not reach PayFast to cancel. Try again shortly."}), 502
+    # Plan itself flips to "free" only once the cancellation ITN arrives
+    # (see the webhook handler) -- this just records that a cancel request
+    # was sent, so the UI can show "Cancelling..." in the meantime.
+    current_user.subscription_status = "cancelling"
+    db.session.commit()
+    return jsonify({"ok": True})
 
 
-@webhook_bp.route("/webhook/stripe", methods=["POST"])
-def stripe_webhook():
-    payload = request.get_data()
-    sig_header = request.headers.get("Stripe-Signature", "")
-    try:
-        event = stripe.Webhook.construct_event(payload, sig_header, _WEBHOOK_SECRET)
-    except (ValueError, stripe.error.SignatureVerificationError):
+@webhook_bp.route("/webhook/payfast", methods=["POST"])
+def payfast_webhook():
+    raw_body = request.get_data()
+    fields = request.form.to_dict()
+
+    # Four required checks (see payfast.py's module docstring for why each
+    # one matters) -- any hard failure rejects the ITN outright.
+    if not payfast.verify_itn_signature(fields):
         return jsonify({"error": "Invalid signature"}), 400
 
-    obj = event["data"]["object"]
-    etype = event["type"]
+    host_check = payfast.verify_source_host(request.remote_addr or "")
+    if host_check is False:
+        return jsonify({"error": "Untrusted source"}), 400
+    # host_check is None (inconclusive) falls through deliberately -- the
+    # signature and validate-endpoint checks carry the real weight here.
 
-    if etype == "checkout.session.completed":
-        user = _find_user(obj.get("client_reference_id"), obj.get("customer"))
-        if user:
-            user.stripe_customer_id = obj.get("customer") or user.stripe_customer_id
-            user.stripe_subscription_id = obj.get("subscription")
-            user.plan = "pro"
-            user.subscription_status = "active"
-            db.session.commit()
+    if not payfast.validate_with_payfast(raw_body):
+        return jsonify({"error": "PayFast validation failed"}), 400
 
-    elif etype == "customer.subscription.updated":
-        user = User.query.filter_by(stripe_customer_id=obj.get("customer")).first()
-        if user:
-            sub_status = obj.get("status")
-            user.subscription_status = sub_status
-            user.plan = "pro" if sub_status in _ACTIVE_STATUSES else "free"
-            db.session.commit()
+    user_id = fields.get("custom_str1")
+    user = db.session.get(User, int(user_id)) if user_id else None
+    if not user:
+        return jsonify({"error": "Unknown user"}), 400
 
-    elif etype == "customer.subscription.deleted":
-        user = User.query.filter_by(stripe_customer_id=obj.get("customer")).first()
-        if user:
-            user.plan = "free"
-            user.subscription_status = "canceled"
-            db.session.commit()
+    expected_amount = float(PRO_PRICE_ZAR)
+    posted_amount = float(fields.get("amount_gross", 0) or 0)
+    payment_status = fields.get("payment_status", "")
+
+    if payment_status == "COMPLETE":
+        if abs(posted_amount - expected_amount) > 0.01:
+            # Amount mismatch on an otherwise-valid, PayFast-confirmed ITN
+            # -- don't silently grant Pro at the wrong price.
+            return jsonify({"error": "Amount mismatch"}), 400
+        user.plan = "pro"
+        user.subscription_status = "active"
+        token = fields.get("token")
+        if token:
+            user.payfast_token = token
+        db.session.commit()
+    elif payment_status == "CANCELLED":
+        user.plan = "free"
+        user.subscription_status = "cancelled"
+        db.session.commit()
+    elif payment_status == "FAILED":
+        # A single failed recurring charge isn't necessarily the end of the
+        # subscription (PayFast retries) -- record it, don't downgrade yet.
+        user.subscription_status = "past_due"
+        db.session.commit()
 
     return jsonify({"ok": True})
