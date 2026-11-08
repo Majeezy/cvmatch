@@ -41,3 +41,7 @@ services:
         sync: false
       - key: EMAIL_FROM
         sync: false
+      # Sandbox-testing-only, see billing.py's payfast_checkout(). Unset
+      # in real production use.
+      - key: PAYFAST_TEST_BUYER_EMAIL
+        sync: false

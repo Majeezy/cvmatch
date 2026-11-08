@@ -89,9 +89,22 @@ def create_checkout_session():
 @login_required
 def payfast_checkout():
     origin = _origin()
+    # PAYFAST_TEST_BUYER_EMAIL: sandbox-testing-only override. PayFast
+    # blocks a checkout whose email_address matches the merchant
+    # account's own registered email ("Merchant is unable to receive
+    # payments from the same account") -- confirmed directly against the
+    # sandbox, not assumed. When the same person owns both the PayFast
+    # account and the only verified CVMatch test account, this override
+    # lets that account still exercise the full checkout/webhook flow by
+    # sending a different (non-deliverable, doesn't need to be) email to
+    # PayFast specifically, without touching what CVMatch itself thinks
+    # the user's email is. Unset in production -- current_user.email is
+    # correct there, a real customer's email won't collide with the
+    # merchant's.
+    buyer_email = os.environ.get("PAYFAST_TEST_BUYER_EMAIL") or current_user.email
     fields = payfast.build_subscription_checkout_fields(
         user_id=current_user.id,
-        email=current_user.email,
+        email=buyer_email,
         name_first=current_user.name or "",
         amount_zar=PRO_PRICE_ZAR,
         item_name="CVMatch Pro (monthly)",
