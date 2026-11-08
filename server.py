@@ -95,6 +95,16 @@ def index():
     return html
 
 
+@app.route("/privacy")
+def privacy():
+    return (ROOT / "privacy.html").read_text(encoding="utf-8")
+
+
+@app.route("/terms")
+def terms():
+    return (ROOT / "terms.html").read_text(encoding="utf-8")
+
+
 # ── CV ─────────────────────────────────────────────────────────────────────
 
 @app.route("/api/cvs")
