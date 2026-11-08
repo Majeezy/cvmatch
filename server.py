@@ -12,6 +12,7 @@ sys.path.insert(0, str(ROOT))
 
 from flask import Flask, Response, jsonify, request, send_file, send_from_directory, session
 from flask_login import current_user, login_required
+from werkzeug.middleware.proxy_fix import ProxyFix
 from werkzeug.utils import secure_filename
 from dotenv import load_dotenv
 
@@ -21,6 +22,14 @@ from config import DATABASE_URL, user_dir
 from models import db
 
 app = Flask(__name__, static_folder=str(ROOT), static_url_path="")
+
+# Render terminates TLS at its own edge and forwards plain HTTP internally
+# -- without this, Flask has no way to know the original request was
+# HTTPS, so request.url_root (and anything built from it, like the
+# return_url/notify_url sent to PayFast in billing.py's _origin()) comes
+# out as http://, not https://. x_proto=1 trusts exactly one hop's
+# X-Forwarded-Proto, matching Render's own single reverse-proxy setup.
+app.wsgi_app = ProxyFix(app.wsgi_app, x_proto=1, x_host=1)
 
 _secret = os.environ.get("FLASK_SECRET")
 if not _secret:

@@ -40,9 +40,14 @@ from urllib.parse import quote_plus
 
 import requests
 
-MERCHANT_ID = os.environ.get("PAYFAST_MERCHANT_ID", "")
-MERCHANT_KEY = os.environ.get("PAYFAST_MERCHANT_KEY", "")
-PASSPHRASE = os.environ.get("PAYFAST_PASSPHRASE", "")
+# .strip() because a stray trailing space from a copy-paste into a
+# dashboard env-var field is a real, easy-to-make mistake here -- it
+# silently breaks the signature (still 32 hex chars, just computed over
+# the wrong string) rather than failing loudly, so it's worth guarding
+# against rather than trusting every deployment to paste cleanly.
+MERCHANT_ID = os.environ.get("PAYFAST_MERCHANT_ID", "").strip()
+MERCHANT_KEY = os.environ.get("PAYFAST_MERCHANT_KEY", "").strip()
+PASSPHRASE = os.environ.get("PAYFAST_PASSPHRASE", "").strip()
 SANDBOX = os.environ.get("PAYFAST_SANDBOX", "true").lower() == "true"
 
 _HOST = "sandbox.payfast.co.za" if SANDBOX else "www.payfast.co.za"
