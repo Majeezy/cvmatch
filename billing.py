@@ -9,6 +9,7 @@ never from a frontend success callback -- a browser landing back on
 `return_url` after PayFast checkout proves the user's browser was
 redirected there, not that the payment actually completed.
 """
+import json
 import os
 from datetime import date
 
@@ -55,8 +56,28 @@ def check_bulk_apply_allowed(user: User) -> str | None:
     return None
 
 
+def _request_scheme() -> str:
+    """Render's edge is Cloudflare-fronted and doesn't set the standard
+    X-Forwarded-Proto header ProxyFix looks for -- confirmed directly via
+    a temporary debug route, not assumed. It sends `Cf-Visitor:
+    {"scheme":"https"}` instead, so that's what actually needs reading to
+    get return_url/notify_url right for PayFast behind Render's edge."""
+    cf_visitor = request.headers.get("Cf-Visitor")
+    if cf_visitor:
+        try:
+            scheme = json.loads(cf_visitor).get("scheme")
+            if scheme:
+                return scheme
+        except (ValueError, AttributeError):
+            pass
+    return request.scheme
+
+
 def _origin() -> str:
-    return request.headers.get("Origin") or request.url_root.rstrip("/")
+    if request.headers.get("Origin"):
+        return request.headers["Origin"]
+    host = request.headers.get("Host", request.host)
+    return f"{_request_scheme()}://{host}"
 
 
 @billing_bp.route("/status")
@@ -153,7 +174,12 @@ def payfast_webhook():
     if not payfast.verify_itn_signature(fields):
         return jsonify({"error": "Invalid signature"}), 400
 
-    host_check = payfast.verify_source_host(request.remote_addr or "")
+    # Same Cloudflare-fronted-edge situation as _request_scheme(): no
+    # X-Forwarded-For either, the real client IP is in Cf-Connecting-Ip.
+    # request.remote_addr alone would be Render's internal proxy address,
+    # not PayFast's, making this check meaningless behind this edge.
+    source_ip = request.headers.get("Cf-Connecting-Ip") or request.remote_addr or ""
+    host_check = payfast.verify_source_host(source_ip)
     if host_check is False:
         return jsonify({"error": "Untrusted source"}), 400
     # host_check is None (inconclusive) falls through deliberately -- the

@@ -12,7 +12,6 @@ sys.path.insert(0, str(ROOT))
 
 from flask import Flask, Response, jsonify, request, send_file, send_from_directory, session
 from flask_login import current_user, login_required
-from werkzeug.middleware.proxy_fix import ProxyFix
 from werkzeug.utils import secure_filename
 from dotenv import load_dotenv
 
@@ -23,14 +22,12 @@ from models import db
 
 app = Flask(__name__, static_folder=str(ROOT), static_url_path="")
 
-# Render terminates TLS at its own edge and forwards plain HTTP internally
-# -- without this, Flask has no way to know the original request was
-# HTTPS, so request.url_root (and anything built from it, like the
-# return_url/notify_url sent to PayFast in billing.py's _origin()) comes
-# out as http://, not https://. x_proto=1 trusts exactly one hop's
-# X-Forwarded-Proto, matching Render's own single reverse-proxy setup.
-app.wsgi_app = ProxyFix(app.wsgi_app, x_proto=1, x_host=1)
-
+# No ProxyFix here -- tried it, and it's a no-op behind Render's actual
+# edge (confirmed via a temporary debug route): Render is Cloudflare-
+# fronted and sends Cf-Visitor/Cf-Connecting-Ip, not the standard
+# X-Forwarded-Proto/X-Forwarded-For ProxyFix expects. billing.py reads
+# the Cloudflare-specific headers directly instead (_request_scheme()
+# and the webhook's source-IP check).
 _secret = os.environ.get("FLASK_SECRET")
 if not _secret:
     # No persisted secret — generate one and write it to .env so sessions
@@ -87,17 +84,6 @@ def _parse_raw(raw: str) -> dict:
 
 
 # ── Index & Static ─────────────────────────────────────────────────────────
-
-@app.route("/debug-headers")
-def debug_headers():
-    # Temporary -- diagnosing why ProxyFix isn't correcting the scheme
-    # behind Render's edge. Remove once resolved.
-    return jsonify({
-        "url_root": request.url_root,
-        "scheme": request.scheme,
-        "headers": dict(request.headers),
-    })
-
 
 @app.route("/")
 def index():
