@@ -88,6 +88,17 @@ def _parse_raw(raw: str) -> dict:
 
 # ── Index & Static ─────────────────────────────────────────────────────────
 
+@app.route("/debug-headers")
+def debug_headers():
+    # Temporary -- diagnosing why ProxyFix isn't correcting the scheme
+    # behind Render's edge. Remove once resolved.
+    return jsonify({
+        "url_root": request.url_root,
+        "scheme": request.scheme,
+        "headers": dict(request.headers),
+    })
+
+
 @app.route("/")
 def index():
     prefill = request.args.get("bookmarklet_url", "")
